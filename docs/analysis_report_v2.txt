@@ -1,0 +1,343 @@
+==================================================================================
+  Moon Patrol (Irem, 1982) ROM Analysis — romset: mpatrol
+  Directory: /Users/abayrak/Downloads/mpng/orig_rom
+==================================================================================
+
+[1] INVENTORY
+
+  File               Size    Exp Status    Region     Address / Role
+  ----------------------------------------------------------------------------------
+  mpa-1.3m           4096   4096 OK        maincpu    0x6000-0x6FFF  program bank 0
+  mpa-2.3l           4096   4096 OK        maincpu    0x7000-0x7FFF  program bank 1
+  mpa-3.3k           4096   4096 OK        maincpu    0x8000-0x8FFF  program bank 2
+  mpa-4.3j           4096   4096 OK        maincpu    0x9000-0x9FFF  program bank 3
+  mpb-1.3n           4096   4096 OK        maincpu    0xA000-0xAFFF  banked program 0
+  mpb-2.3m           4096   4096 OK        maincpu    0xB000-0xBFFF  banked program 1
+  mpc-3.1m             32     32 OK        maincpu    0xFFE0-0xFFFF  boot code + vectors
+  mpc-1.1f             32     32 OK        audiocpu   sound CPU init
+  mpc-2.2h            256    256 OK        audiocpu   sound CPU program
+  mpc-4.2a            512    512 OK        audiocpu   sound CPU program
+  mpe-1.3l           4096   4096 OK        gfx        tile graphics bank 0
+  mpe-2.3k           4096   4096 OK        gfx        tile graphics bank 1
+  mpe-3.3h           4096   4096 OK        gfx        tile graphics bank 2
+  mpe-4.3f           4096   4096 OK        gfx        tile graphics bank 3
+  mpe-5.3e           4096   4096 OK        gfx        tile graphics bank 4
+  mp-s1.1a           4096   4096 OK        misc       character / sound data
+  mp_7621-5.7h        512    512 OK        misc       PROM / small data
+
+  [OK] All 17 files present, sizes match MAME mpatrol romset
+
+[2] HASHES  (compare with: mame -listroms mpatrol)
+
+  File             CRC32      SHA1
+  --------------------------------------------------------------------------
+  mpa-1.3m         5873a860   8c03726d6e049c3edbc277440184e31679f78258
+  mpa-2.3l         f4b85974   dfb2efb57378a20af6f20569f4360cde95596f93
+  mpa-3.3k         2e1a598c   112c3c9678db8a8540a8df3708020c87fd10c91b
+  mpa-4.3j         dd05b587   727961b0dafa4a96b580d51013336db2a18aff1e
+  mpb-1.3n         9b72133a   1393ef92ae1ad58a4b62ca1660c0793d30a8b5e2
+  mpb-2.3m         707ace5e   93c682e13e74bce29ced3a87bffb29569c114c3b
+  mpc-3.1m         6a57eff2   2d1c12dab5915da2ccd466e39436c88be434d634
+  mpc-1.1f         26979b13   8c41a8cce4f3384c392a9f7a223a50d7be0e14a5
+  mpc-2.2h         7ae4cd97   bc0662fac82ffe65f02092d912b2c2b0c7a8ac2b
+  mpc-4.2a         07f99284   dfc52958f2520e1ce4446dd4c84c91413bbacf76
+  mpe-1.3l         c46a7f72   8bb7c9acaf6833fb6c0575b015991b873a305a84
+  mpe-2.3k         c7aa1fb0   14c6c76e1d0db2c0745e5d6d33ea6945fac8e9ee
+  mpe-3.3h         a0919392   8a090cb8d483a3d67c7360058e3fdd70e151cd62
+  mpe-4.3f         cca6d023   fecb3059fb09897a096add9452b50aec55c07545
+  mpe-5.3e         e3ee7f75   b03d0d56150d3e9da4a4c871338097b4f450b649
+  mp-s1.1a         561d3108   4998c68a9e9a8002251fa8f07aa1082444a9dc80
+  mp_7621-5.7h     cf1fd9d0   f9575bc59bf21dfecd10133264835e02890562f8
+
+[3] VECTOR TABLE (mpc-3.1m: 6809 boot code at 0xFFE0 + vectors at 0xFFF0)
+
+  Raw bytes (32):
+  00000000  00 20 00 70 c0 20 00 70 00 20 00 70 a0 20 00 70  |. .p. .p. .p. .p|
+  00000010  00 00 77 70 c0 00 77 70 00 00 77 70 a0 00 77 70  |..wp..wp..wp..wp|
+
+  Off    Vector     Addr     Points into  Sanity
+  ------------------------------------------------------------
+  0x10   Reserved   0x0000   —            unused
+  0x12   SWI3       0x7770   mpa-2.3l+0x770 OK
+  0x14   SWI2       0xc000   —            stub (0xC000)
+  0x16   FIRQ       0x7770   mpa-2.3l+0x770 OK
+  0x18   IRQ        0x0000   —            unused
+  0x1a   SWI        0x7770   mpa-2.3l+0x770 OK
+  0x1c   NMI        0xa000   mpb-1.3n+0x000 OK
+  0x1e   RESET      0x7770   mpa-2.3l+0x770 OK
+
+  5/8 vectors point into program ROM (0x6000-0xBFFF)
+  [OK] vector table is consistent with Irem M52 memory map
+
+[3b] RESET TRACE
+
+  RESET vector = 0x7770
+  -> maps to mpa-2.3l at file offset 0x770
+  First 32 bytes of entry code:
+  00000770  e6 0f 0e 01 fe 0e 30 07 cd c2 02 e1 c3 52 08 20  |......0......R. |
+  00000780  13 cd f0 17 c6 05 dd 77 08 cd c2 02 dd 34 00 dd  |.......w.....4..|
+  [OK] entry code looks like real 6809 instructions
+
+[4] PER-FILE ANALYSIS
+
+  ### mpa-1.3m  (4096 bytes)
+      MD5:     c7ad538365f8d10c06910079822c448d
+      SHA256:  8c0bbcdac66525b834bd0d3ec576d40ba5ccefc6a12f06e7b50a15bc4909ffea
+      Entropy: 6.850 bits/byte
+      Unique:  233/256
+      Top:     0x00x191, 0xcdx148, 0x21x139
+      Head:
+  00000000  f3 31 00 e8 ed 56 3a 04 d0 a7 f2 00 33 cd f4 05  |.1...V:.....3...|
+  00000010  cd f2 06 cd 29 0d c3 68 00 00 00 00 00 00 00 00  |....)..h........|
+      Tail:
+  00000fe0  19 10 f8 c9 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000ff0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a5  |................|
+
+  ### mpa-2.3l  (4096 bytes)
+      MD5:     21532425bc044557c9b636b2f930cf1a
+      SHA256:  223bd689b56e58eac3e5b82dbb99ca296db9d8ac47f5ebbbbb95601b1256f830
+      Entropy: 6.722 bits/byte
+      Unique:  221/256
+      Top:     0xddx233, 0x00x175, 0xe3x98
+      Head:
+  00000000  00 0e 12 f0 10 00 01 00 01 0f 12 f0 10 00 01 00  |................|
+  00000010  02 10 12 f0 10 00 01 00 03 11 12 f0 10 00 01 00  |................|
+      Tail:
+  00000fe0  0f 38 02 19 19 22 da e0 c3 78 1f 19 18 e8 00 00  |.8..."...x......|
+  00000ff0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+
+  ### mpa-3.3k  (4096 bytes)
+      MD5:     6c9caa46c3ab5577b146391bf1003a23
+      SHA256:  c566eee0c3e6fd271770e55e08455492be842b1a3589a1fd423c2067edcacac1
+      Entropy: 6.825 bits/byte
+      Unique:  251/256
+      Top:     0x00x500, 0x20x138, 0x01x112
+      Head:
+  00000000  dd 34 00 dd 7e 0c e6 7f c8 cd 28 1f dd 7e 00 fe  |.4..~.....(..~..|
+  00000010  25 ca 83 1f fe 24 ca aa 1e c9 cd 63 1c cd db 20  |%....$.....c... |
+      Tail:
+  00000fe0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000ff0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a3  |................|
+
+  ### mpa-4.3j  (4096 bytes)
+      MD5:     02e525233c805324d3d9638239bc65d1
+      SHA256:  1ed45acb8b1adf81ab2c2cce3084fee599c1a41c47f39b0783881545bdc3de8b
+      Entropy: 6.312 bits/byte
+      Unique:  237/256
+      Top:     0x00x842, 0x01x92, 0x21x83
+      Head:
+  00000000  01 02 02 03 03 04 04 05 60 01 58 01 50 01 48 01  |........`.X.P.H.|
+  00000010  40 01 38 01 39 10 39 20 39 30 39 48 39 60 39 70  |@.8.9.9 909H9`9p|
+      Tail:
+  00000fe0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000ff0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03  |................|
+
+  ### mpb-1.3n  (4096 bytes)
+      MD5:     a9a9a8a6653c1cd4f654365c5020643a
+      SHA256:  10a945906a3c9879512b70f66e18a72e73e57c9fd2cb94baa989499db814fbc8
+      Entropy: 3.395 bits/byte
+      Unique:  151/256
+      Top:     0x00x2333, 0xffx168, 0xf0x95
+      Head:
+  00000000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+      Tail:
+  00000fe0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000ff0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+
+  ### mpb-2.3m  (4096 bytes)
+      MD5:     f9298d58e0d25eb62f9f61b57a117735
+      SHA256:  fcd0cc721cda3cd461a6d97d4ffa5b446aa5d9d8d016cd808b93c189a6c3fee4
+      Entropy: 3.666 bits/byte
+      Unique:  168/256
+      Top:     0x00x2264, 0xffx216, 0x80x73
+      Head:
+  00000000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+      Tail:
+  00000fe0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000ff0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+
+  ### mpc-3.1m  (32 bytes)
+      MD5:     032cb96b1f80c63516804a679c4b830f
+      SHA256:  129a6c6a2d41965c17dd994de80c22f68bd55706150d34932b01c2d4bf0a53dc
+      Entropy: 2.281 bits/byte
+      Unique:  6/256
+      Top:     0x00x12, 0x70x8, 0x20x4
+      Head:
+  00000000  00 20 00 70 c0 20 00 70 00 20 00 70 a0 20 00 70  |. .p. .p. .p. .p|
+  00000010  00 00 77 70 c0 00 77 70 00 00 77 70 a0 00 77 70  |..wp..wp..wp..wp|
+
+  ### mpc-1.1f  (32 bytes)
+      MD5:     a4b5024f3aa8147de3d7138250252159
+      SHA256:  4951e3a71d89c28f36eb94941f3e563844b25a3dd4bbbb9b15b38440e6a46c77
+      Entropy: 2.829 bits/byte
+      Unique:  16/256
+      Top:     0x00x17, 0x01x1, 0xc6x1
+      Head:
+  00000000  00 01 c6 37 b8 c0 38 80 ff f8 98 50 47 e8 6f 18  |...7..8....PG.o.|
+  00000010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+
+  ### mpc-2.2h  (256 bytes)
+      MD5:     c09ab6cc96635b32290323fd1bef3ae4
+      SHA256:  9e15530af6703529465a262f9ec45c00d03e7cf1cc486546aae90074248e5cea
+      Entropy: 1.067 bits/byte
+      Unique:  15/256
+      Top:     0x00x219, 0x05x12, 0x01x5
+      Head:
+  00000000  00 01 02 03 00 00 00 00 00 04 02 05 00 00 00 00  |................|
+  00000010  00 05 06 07 00 00 00 00 00 07 08 09 00 00 00 00  |................|
+      Tail:
+  000000e0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  000000f0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+
+  ### mpc-4.2a  (512 bytes)
+      MD5:     01d80677e7023fcffb18c0173c6fcfbb
+      SHA256:  aee64d8572c231af4ab9c7d7394e18033a05739f35c599ee63aadcdf8f5d83fc
+      Entropy: 0.957 bits/byte
+      Unique:  15/256
+      Top:     0x00x449, 0xe8x13, 0x01x9
+      Head:
+  00000000  00 e8 ff 0f c8 0f 3f c8 e8 01 0f c8 e8 28 87 00  |......?......(..|
+  00000010  00 67 00 5c 67 01 00 00 c8 87 01 e8 e8 87 00 00  |.g.\g...........|
+      Tail:
+  000001e0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  000001f0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+
+  ### mpe-1.3l  (4096 bytes)
+      MD5:     6903b8712070f7689716bc524253ab1f
+      SHA256:  9dfc767191007570bcb6d8a8fb8cd230a8f59875cf579104cb603d7dba25a65f
+      Entropy: 2.503 bits/byte
+      Unique:  68/256
+      Top:     0xffx2042, 0x00x1213, 0xf7x82
+      Head:
+  00000000  00 00 00 00 40 00 00 00 00 00 00 00 00 00 00 00  |....@...........|
+  00000010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 cc  |................|
+      Tail:
+  00000fe0  ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  |................|
+  00000ff0  ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  |................|
+
+  ### mpe-2.3k  (4096 bytes)
+      MD5:     7a6d975b33649f67b21ce5e862fac7b5
+      SHA256:  d9d6368907ae5b53359003c20ac55f8b5586a8019af41c4661f1afc5b5f4dc4f
+      Entropy: 1.627 bits/byte
+      Unique:  30/256
+      Top:     0xffx2524, 0x00x1164, 0xf0x140
+      Head:
+  00000000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+      Tail:
+  00000fe0  ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  |................|
+  00000ff0  ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  |................|
+
+  ### mpe-3.3h  (4096 bytes)
+      MD5:     baa04957d69f974188cf02a03b8887d7
+      SHA256:  fbb83dfa6aced611f166d843fb9d10cb1586fdfe02b4a59ccf50625d3250579e
+      Entropy: 2.838 bits/byte
+      Unique:  79/256
+      Top:     0x00x1878, 0xffx1121, 0x0fx149
+      Head:
+  00000000  00 00 00 11 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000010  00 00 00 00 00 00 00 00 00 00 44 00 00 00 00 00  |..........D.....|
+      Tail:
+  00000fe0  ff ff ff cf 0f 0f 00 00 ff ff ff ff ff ff ff ff  |................|
+  00000ff0  ff ef 0f 0c 00 ff ff ff ff ff ff ff ff 0f 0f 00  |................|
+
+  ### mpe-4.3f  (4096 bytes)
+      MD5:     ba7a31c2255121ae9da66cc94814b902
+      SHA256:  d1ec2e33ecaa701d46093dcf0b3d183177df82310f3983790044550176f9af17
+      Entropy: 2.738 bits/byte
+      Unique:  74/256
+      Top:     0xffx2080, 0x00x990, 0xfcx77
+      Head:
+  00000000  00 00 00 00 00 00 00 00 00 10 11 7f ff 9c 08 00  |................|
+  00000010  00 e0 f8 fc fc c8 40 00 00 00 00 00 00 00 00 00  |......@.........|
+      Tail:
+  00000fe0  00 00 00 00 00 00 00 00 87 9f bf ff ff ff c0 00  |................|
+  00000ff0  80 80 81 03 07 07 07 07 fe fe fe fe fc fc fc fc  |................|
+
+  ### mpe-5.3e  (4096 bytes)
+      MD5:     8579f53b25bc0bd54f5368fa3179409e
+      SHA256:  62273cf100379abe374e87450c4203a5f235b41e1ffd0e3284122156ccd072fa
+      Entropy: 2.111 bits/byte
+      Unique:  89/256
+      Top:     0x00x3018, 0xffx233, 0x80x91
+      Head:
+  00000000  00 00 00 00 00 00 00 00 00 10 10 10 00 63 f7 63  |.............c.c|
+  00000010  00 00 70 00 00 30 b0 30 00 00 00 00 00 00 00 00  |..p..0.0........|
+      Tail:
+  00000fe0  f8 00 00 00 00 00 00 00 00 00 00 00 00 00 3f e0  |..............?.|
+  00000ff0  00 40 40 c0 80 80 80 00 00 01 01 01 03 02 02 02  |.@@.............|
+
+  ### mp-s1.1a  (4096 bytes)
+      MD5:     75f5da998cc25a4565f1df1544372c92
+      SHA256:  18ff221d5aad217c4a8faa5238dbd873ece048049d63d9b069fd433b09e5920f
+      Entropy: 6.540 bits/byte
+      Unique:  242/256
+      Top:     0x00x697, 0x20x193, 0x09x148
+      Head:
+  00000000  88 08 14 3f 8d 51 0c 24 e0 91 00 f9 3a 1a 80 c2  |...?.Q.$....:...|
+  00000010  f1 35 00 d1 59 88 89 d4 2b b0 52 8d 84 a1 2b 84  |.5..Y...+.R...+.|
+      Tail:
+  00000fe0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |................|
+  00000ff0  fb 00 fb 00 fb 00 fb 00 fc 8b fb 00 fb d9 fb 00  |................|
+
+  ### mp_7621-5.7h  (512 bytes)
+      MD5:     17c581e715f0e8d6d1a224412108a0ab
+      SHA256:  bd7a10c96de90a48e68d3e717b98e37cb18ddaa2f40ceb3b8ab022afe178f69f
+      Entropy: 3.323 bits/byte
+      Unique:  16/256
+      Top:     0x06x91, 0x09x91, 0x0ax77
+      Head:
+  00000000  00 08 08 04 08 04 04 0c 08 04 04 0c 02 0a 0a 06  |................|
+  00000010  08 04 04 0c 02 0a 0a 06 02 0a 0a 06 0a 06 06 0e  |................|
+      Tail:
+  000001e0  01 09 09 05 09 05 05 0d 09 05 05 0d 03 0b 0b 07  |................|
+  000001f0  09 05 05 0d 03 0b 0b 07 03 0b 0b 07 0b 07 07 0f  |................|
+
+[5] STRUCTURAL OBSERVATIONS
+
+  maincpu      7 files,  24608 bytes
+  audiocpu     3 files,    800 bytes
+  gfx          5 files,  20480 bytes
+  misc         2 files,   4608 bytes
+
+  Entropy chart (higher = code/compressed, lower = data/padding):
+  mpa-1.3m         6.85  ###########################
+  mpa-2.3l         6.72  ##########################
+  mpa-3.3k         6.83  ###########################
+  mpa-4.3j         6.31  #########################
+  mpb-1.3n         3.40  #############
+  mpb-2.3m         3.67  ##############
+  mpc-3.1m         2.28  #########
+  mpc-1.1f         2.83  ###########
+  mpc-2.2h         1.07  ####
+  mpc-4.2a         0.96  ###
+  mpe-1.3l         2.50  ##########
+  mpe-2.3k         1.63  ######
+  mpe-3.3h         2.84  ###########
+  mpe-4.3f         2.74  ##########
+  mpe-5.3e         2.11  ########
+  mp-s1.1a         6.54  ##########################
+  mp_7621-5.7h     3.32  #############
+
+[6] VERIFICATION WITH MAME
+
+  Compare CRC32/SHA1 above with:
+      mame -listroms mpatrol
+
+  Direct verify (creates .zip and checks):
+      cd /path/to/roms
+      zip -j mpatrol.zip mpa-1.3m mpa-2.3l mpa-3.3k mpa-4.3j \
+                         mpb-1.3n mpb-2.3m mpc-3.1m \
+                         mpc-1.1f mpc-2.2h mpc-4.2a \
+                         mpe-1.3l mpe-2.3k mpe-3.3h mpe-4.3f mpe-5.3e \
+                         mp-s1.1a mp_7621-5.7h
+      mkdir -p ~/mame/roms && mv mpatrol.zip ~/mame/roms/
+      mame -rompath ~/mame/roms -verifyroms mpatrol
+
+  Expected output: "mpatrol: OK"
+
+==================================================================================
+  Analysis complete.
+==================================================================================

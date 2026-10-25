@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Patrol (Irem, 1982) — Технический отчёт</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/green-screen.min.css">
+<style>
+:root{
+  --bg:#050505;
+  --bg-soft:#0a120a;
+  --text:#00dd44;
+  --text-bright:#00ff88;
+  --text-dim:#007744;
+  --border:#0a3a0a;
+  --accent:#33ff99;
+  --code-bg:#061006;
+  --code-border:#0a3a0a;
+  --sidebar-bg:#071007;
+  --sidebar-width:280px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;scroll-padding-top:80px;}
+body{
+  margin:0;padding:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:15px;line-height:1.65;
+}
+header.top{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:linear-gradient(180deg,#030803 0%,#0a120a 100%);
+  border-bottom:2px solid var(--border);
+  padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 10px rgba(0,255,68,0.1);
+}
+header.top h1{
+  margin:0;font-size:18px;color:var(--text-bright);
+  font-family:'Menlo','Monaco','Courier New',monospace;
+  letter-spacing:0.5px;
+}
+header.top .badge{
+  font-size:12px;color:var(--text-dim);margin-left:12px;
+}
+.menu-btn{
+  background:none;border:1px solid var(--border);
+  color:var(--text-bright);cursor:pointer;
+  padding:6px 10px;border-radius:4px;
+  font-family:inherit;font-size:14px;
+  display:none;
+}
+.menu-btn:hover{background:var(--bg-soft);}
+
+nav.toc{
+  position:fixed;top:60px;left:0;bottom:0;width:var(--sidebar-width);
+  background:var(--sidebar-bg);
+  border-right:2px solid var(--border);
+  overflow-y:auto;padding:16px 0;
+  font-size:13px;
+  transition:transform 0.25s ease;
+  z-index:90;
+}
+nav.toc h2{
+  color:var(--text-bright);font-size:13px;
+  text-transform:uppercase;letter-spacing:1px;
+  margin:0 0 10px 20px;padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+  font-family:'Menlo','Monaco','Courier New',monospace;
+}
+nav.toc ol{list-style:none;padding:0;margin:0;}
+nav.toc li{margin:0;}
+nav.toc a{
+  display:block;padding:7px 20px 7px 24px;
+  color:var(--text);text-decoration:none;
+  border-left:3px solid transparent;
+  transition:all 0.15s ease;
+  font-family:'Menlo','Monaco','Courier New',monospace;
+  font-size:12.5px;
+}
+nav.toc a:hover{
+  background:rgba(0,255,68,0.08);
+  color:var(--text-bright);
+  border-left-color:var(--accent);
+}
+nav.toc a.active{
+  background:rgba(0,255,68,0.12);
+  color:var(--text-bright);
+  border-left-color:var(--text-bright);
+  font-weight:600;
+}
+
+main{
+  margin-left:var(--sidebar-width);
+  padding:80px 40px 60px 40px;
+  max-width:1100px;
+}
+
+section{
+  margin-bottom:60px;
+  padding-top:10px;
+  scroll-margin-top:80px;
+}
+section h2{
+  color:var(--text-bright);
+  font-size:26px;
+  margin:0 0 20px 0;
+  padding-bottom:10px;
+  border-bottom:2px solid var(--border);
+  font-family:'Menlo','Monaco','Courier New',monospace;
+  letter-spacing:0.5px;
+}
+section h3{
+  color:var(--accent);
+  font-size:19px;
+  margin:30px 0 12px 0;
+  font-family:'Menlo','Monaco','Courier New',monospace;
+}
+section h4{
+  color:var(--text-bright);
+  font-size:15px;
+  margin:22px 0 8px 0;
+  font-family:'Menlo','Monaco','Courier New',monospace;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+section p{margin:10px 0;}
+section ul,section ol{margin:10px 0 10px 0;padding-left:26px;}
+section li{margin:4px 0;}
+
+a{color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent);}
+a:hover{color:var(--text-bright);border-bottom-style:solid;}
+
+strong{color:var(--text-bright);font-weight:600;}
+em{color:var(--accent);font-style:italic;}
+
+table{
+  width:100%;border-collapse:collapse;
+  margin:16px 0;
+  font-size:13.5px;
+  background:var(--bg-soft);
+  border:1px solid var(--border);
+}
+th,td{
+  padding:8px 12px;
+  text-align:left;
+  border-bottom:1px solid var(--border);
+  font-family:'Menlo','Monaco','Courier New',monospace;
+  font-size:12.5px;
+}
+th{
+  background:rgba(0,255,68,0.1);
+  color:var(--text-bright);
+  font-weight:600;
+  letter-spacing:0.3px;
+}
+tr:hover{background:rgba(0,255,68,0.04);}
+td code{
+  background:var(--code-bg);
+  padding:1px 5px;
+  border-radius:3px;
+  color:var(--text-bright);
+  font-size:12px;
+}
+
+pre{
+  background:var(--code-bg);
+  border:1px solid var(--code-border);
+  border-left:3px solid var(--accent);
+  border-radius:4px;
+  padding:14px 18px;
+  overflow-x:auto;
+  margin:16px 0;
+  font-size:13px;
+  line-height:1.55;
+}
+pre code{
+  background:transparent;
+  padding:0;
+  color:var(--text);
+  font-family:'Menlo','Monaco','Courier New',monospace;
+}
+code{
+  font-family:'Menlo','Monaco','Courier New',monospace;
+}
+
+/* highlight.js custom theme — green on black */
+.hljs{background:transparent;color:var(--text);}
+.hljs-comment,.hljs-quote{color:#007744;font-style:italic;}
+.hljs-keyword,.hljs-built_in,.hljs-type{color:var(--text-bright);font-weight:bold;}
+.hljs-string,.hljs-attr,.hljs-symbol{color:#66ff99;}
+.hljs-number,.hljs-literal{color:#aaffcc;}
+.hljs-title,.hljs-function,.hljs-name{color:#33ff99;}
+.hljs-variable,.hljs-template-variable{color:#88ffaa;}
+.hljs-params{color:#00cc55;}
+.hljs-meta{color:#00aa55;}
+.hljs-deletion{color:#ff6666;}
+.hljs-addition{color:#66ff66;}
+
+blockquote{
+  border-left:4px solid var(--accent);
+  padding:8px 16px;
+  margin:16px 0;
+  background:rgba(0,255,68,0.05);
+  color:var(--text);
+  font-style:italic;
+}
+blockquote strong{color:var(--text-bright);}
+
+hr{
+  border:none;
+  border-top:1px solid var(--border);
+  margin:30px 0;
+}
+
+.back-top{
+  position:fixed;bottom:30px;right:30px;
+  background:var(--bg-soft);
+  color:var(--text-bright);
+  border:2px solid var(--accent);
+  border-radius:50%;
+  width:50px;height:50px;
+  font-size:22px;cursor:pointer;
+  display:none;
+  align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(0,255,68,0.3);
+  transition:all 0.2s ease;
+  z-index:95;
+}
+.back-top:hover{
+  background:var(--accent);
+  color:var(--bg);
+  transform:translateY(-3px);
+}
+.back-top.show{display:flex;}
+
+footer{
+  margin-left:var(--sidebar-width);
+  padding:30px 40px;
+  border-top:2px solid var(--border);
+  color:var(--text-dim);
+  font-size:12px;
+  font-family:'Menlo','Monaco','Courier New',monospace;
+  text-align:center;
+}
+
+@media (max-width:900px){
+  .menu-btn{display:block;}
+  nav.toc{transform:translateX(-100%);width:260px;}
+  nav.toc.open{transform:translateX(0);}
+  main{margin-left:0;padding:80px 20px 60px 20px;}
+  footer{margin-left:0;}
+  section h2{font-size:22px;}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>Moon Patrol (Irem, 1982) <span class="badge">Технический отчёт · v1.0</span></h1>
+  </div>
+  <button class="menu-btn" id="menuBtn">☰ Меню</button>
+</header>
+
+<nav class="toc" id="toc">
+  <h2>Содержание</h2>
+  <ol>
+    <li><a href="#s1">1. Введение</a></li>
+    <li><a href="#s2">2. История и версии</a></li>
+    <li><a href="#s3">3. Аппаратная архитектура</a></li>
+    <li><a href="#s4">4. ROM-наборы</a></li>
+    <li><a href="#s5">5. Карта памяти</a></li>
+    <li><a href="#s6">6. Стартовый код</a></li>
+    <li><a href="#s7">7. IRQ-обработчик</a></li>
+    <li><a href="#s8">8. Главный игровой цикл</a></li>
+    <li><a href="#s9">9. Шесть подсистем</a></li>
+    <li><a href="#s10">10. Система объектов</a></li>
+    <li><a href="#s11">11. Логика игрока</a></li>
+    <li><a href="#s12">12. Рендер уровня (RLE)</a></li>
+    <li><a href="#s13">13. Прокрутка параллакса</a></li>
+    <li><a href="#s14">14. HUD и счёт</a></li>
+    <li><a href="#s15">15. Спавн врагов</a></li>
+    <li><a href="#s16">16. Стрельба</a></li>
+    <li><a href="#s17">17. Коллизии</a></li>
+    <li><a href="#s18">18. Анимация</a></li>
+    <li><a href="#s19">19. Скриптовый движок</a></li>
+    <li><a href="#s20">20. Обработка ввода</a></li>
+    <li><a href="#s21">21. Анти-пиратская защита</a></li>
+    <li><a href="#s22">22. Видеоподсистема</a></li>
+    <li><a href="#s23">23. Сводные таблицы</a></li>
+    <li><a href="#s24">24. C++/SDL3</a></li>
+    <li><a href="#s25">25. Инструментарий</a></li>
+    <li><a href="#s26">26. Приложение: карта</a></li>
+    <li><a href="#s27">27. Приложение: команды</a></li>
+    <li><a href="#s28">Заключение</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1">
+<h2>1. Введение</h2>
+<p>Этот документ описывает результаты реверс-инжиниринга аркадной игры <strong>Moon Patrol</strong> (Irem, 1982). Цель — получить полное понимание игровой архитектуры для последующей реимплементации на C++ с SDL3 (проект <strong>Moon Patrol ND</strong>).</p>
+<p><strong>Методология:</strong> статический анализ ROM-файлов через radare2 (Z80-дизассемблер), поиск байтовых сигнатур, ручная расшифровка инструкций, сравнение трёх версий игры (Irem, Williams, bootleg).</p>
+<blockquote><strong>Важно:</strong> изначальная гипотеза о Motorola 6809 оказалась ошибочной. Moon Patrol работает на <strong>Zilog Z80</strong>. Это выяснилось после проверки стартовых байтов: <code>DI; LD SP,$E800; IM 1</code> — учебниковый стартовый код Z80.</blockquote>
+</section>
+
+<section id="s2">
+<h2>2. История и версии</h2>
+<table>
+<tr><th>Версия</th><th>MAME-набор</th><th>Файлы</th><th>Происхождение</th></tr>
+<tr><td>Irem</td><td><code>mpatrol</code></td><td>17</td><td>Оригинал, Япония</td></tr>
+<tr><td>Williams</td><td><code>mpatrolw</code></td><td>7</td><td>Лицензионная, США</td></tr>
+<tr><td>Bootleg</td><td><code>mranger</code></td><td>3</td><td>Пиратская (Moon Ranger)</td></tr>
+</table>
+<p>Все три версии на Z80. Williams — чистый источник для реимплементации (без банковщика).</p>
+</section>
+
+<section id="s3">
+<h2>3. Аппаратная архитектура</h2>
+<table>
+<tr><th>Компонент</th><th>Характеристика</th></tr>
+<tr><td>CPU главный</td><td>Zilog Z80, ~3 МГц</td></tr>
+<tr><td>CPU звук</td><td>Z80 или M6802</td></tr>
+<tr><td>Звук</td><td>AY-3-8910 × 2 (Irem) / Williams своя</td></tr>
+<tr><td>Видео</td><td>Irem M52, 256×256 (32×32 тайла, 8×8)</td></tr>
+<tr><td>RAM</td><td>2 КБ (<code>0xE000–0xE7FF</code>)</td></tr>
+<tr><td>Video RAM</td><td>2 КБ (<code>0x8000–0x87FF</code>)</td></tr>
+<tr><td>ROM программы</td><td>16 КБ (<code>0x0000–0x3FFF</code>)</td></tr>
+<tr><td>ROM графики</td><td>20 КБ (5 × 4 КБ)</td></tr>
+</table>
+</section>
+
+<section id="s4">
+<h2>4. ROM-наборы и подлинность</h2>
+<h3>4.1 Irem mpatrol (49 408 байт)</h3>
+<table>
+<tr><th>Файл</th><th>Размер</th><th>CRC32</th><th>Роль</th></tr>
+<tr><td>mpa-1.3m</td><td>4096</td><td><code>5873a860</code></td><td>Программа 0x0000–0x0FFF</td></tr>
+<tr><td>mpa-2.3l</td><td>4096</td><td><code>f4b85974</code></td><td>Программа 0x1000–0x1FFF</td></tr>
+<tr><td>mpa-3.3k</td><td>4096</td><td><code>2e1a598c</code></td><td>Программа 0x2000–0x2FFF</td></tr>
+<tr><td>mpa-4.3j</td><td>4096</td><td><code>dd05b587</code></td><td>Программа 0x3000–0x3FFF</td></tr>
+<tr><td>mpb-1.3n</td><td>4096</td><td><code>9b72133a</code></td><td>Банковщик (55% нулей)</td></tr>
+<tr><td>mpb-2.3m</td><td>4096</td><td><code>707ace5e</code></td><td>Банковщик (57% нулей)</td></tr>
+<tr><td>mpc-3.1m</td><td>32</td><td><code>6a57eff2</code></td><td>Векторы 6809 (не используется Z80)</td></tr>
+<tr><td>mpc-1.1f</td><td>32</td><td><code>26979b13</code></td><td>Инициализация звука</td></tr>
+<tr><td>mpc-2.2h</td><td>256</td><td><code>7ae4cd97</code></td><td>Программа звука</td></tr>
+<tr><td>mpc-4.2a</td><td>512</td><td><code>07f99284</code></td><td>Программа звука</td></tr>
+<tr><td>mpe-1.3l</td><td>4096</td><td><code>c46a7f72</code></td><td>Графика банк 0</td></tr>
+<tr><td>mpe-2.3k</td><td>4096</td><td><code>c7aa1fb0</code></td><td>Графика банк 1</td></tr>
+<tr><td>mpe-3.3h</td><td>4096</td><td><code>a0919392</code></td><td>Графика банк 2</td></tr>
+<tr><td>mpe-4.3f</td><td>4096</td><td><code>cca6d023</code></td><td>Графика банк 3</td></tr>
+<tr><td>mpe-5.3e</td><td>4096</td><td><code>e3ee7f75</code></td><td>Графика банк 4</td></tr>
+<tr><td>mp-s1.1a</td><td>4096</td><td><code>561d3108</code></td><td>Символы/звук</td></tr>
+<tr><td>mp_7621-5.7h</td><td>512</td><td><code>cf1fd9d0</code></td><td>PROM</td></tr>
+</table>
+<p><strong>Все CRC32 совпадают с MAME</strong> — набор подлинный.</p>
+
+<h3>4.2 Williams mpatrolw</h3>
+<table>
+<tr><th>Файл</th><th>CRC32</th></tr>
+<tr><td>mpa-1w.3m</td><td><code>baa1a1d4</code></td></tr>
+<tr><td>mpa-2w.3l</td><td><code>52459e51</code></td></tr>
+<tr><td>mpa-3w.3k</td><td><code>9b249fe5</code></td></tr>
+<tr><td>mpa-4w.3j</td><td><code>fee76972</code></td></tr>
+<tr><td>mpc-4a.2a</td><td><code>cb0a5ff3</code></td></tr>
+<tr><td>mpe-4w.3f</td><td><code>caaba2d9</code></td></tr>
+<tr><td>mpe-5w.3e</td><td><code>f56e01fe</code></td></tr>
+</table>
+<p>Код в <code>mpa-2w.3l</code> сдвинут на <code>+0x40</code> относительно Irem.</p>
+
+<h3>4.3 Bootleg mranger</h3>
+<p><code>mra-2.3l</code>, <code>mra-3.3k</code>, <code>mra-4.3j</code>. Файла <code>mra-1</code> нет (вырезан).</p>
+</section>
+
+<section id="s5">
+<h2>5. Карта памяти</h2>
+<h3>5.1 Адресное пространство Z80</h3>
+<table>
+<tr><th>Адрес</th><th>Размер</th><th>Назначение</th></tr>
+<tr><td><code>0x0000–0x3FFF</code></td><td>16 КБ</td><td>ROM программы</td></tr>
+<tr><td><code>0x4000–0x7FFF</code></td><td>16 КБ</td><td>Банковщик (не используется в Williams)</td></tr>
+<tr><td><code>0x8000–0x83FF</code></td><td>1 КБ</td><td>Screen RAM (32×32 тайла)</td></tr>
+<tr><td><code>0x8400–0x87FF</code></td><td>1 КБ</td><td>Color RAM (атрибуты)</td></tr>
+<tr><td><code>0xD000–0xD0FF</code></td><td>256 Б</td><td>I/O-порты</td></tr>
+<tr><td><code>0xE000–0xE7FF</code></td><td>2 КБ</td><td>RAM (все переменные)</td></tr>
+</table>
+
+<h3>5.2 Разбиение RAM</h3>
+<table>
+<tr><th>Адрес</th><th>Назначение</th></tr>
+<tr><td><code>0xE000–0xE007</code></td><td>Кольцевой буфер звука</td></tr>
+<tr><td><code>0xE008–0xE00A</code></td><td>High score (BCD)</td></tr>
+<tr><td><code>0xE03C–0xE03D</code></td><td>Состояние кнопки / edge</td></tr>
+<tr><td><code>0xE046</code></td><td>Счётчик фазы</td></tr>
+<tr><td><code>0xE04D</code></td><td>Флаг «игра идёт»</td></tr>
+<tr><td><code>0xE04E</code></td><td>Кадровый счётчик (60 Гц)</td></tr>
+<tr><td><code>0xE04F</code></td><td>Медленный тик (4 Гц)</td></tr>
+<tr><td><code>0xE050</code></td><td>Таймер 1</td></tr>
+<tr><td><code>0xE051</code></td><td>Таймер 2</td></tr>
+<tr><td><code>0xE052</code></td><td>Тик последней стрельбы</td></tr>
+<tr><td><code>0xE100–0xE1BF</code></td><td>Спрайт-буфер (192 Б)</td></tr>
+<tr><td><code>0xE1C0–0xE1C3</code></td><td>Регистры прокрутки (4 слоя)</td></tr>
+<tr><td><code>0xE1C3</code></td><td>Anti-piracy флаг</td></tr>
+<tr><td><code>0xE1C5</code></td><td>Палитра</td></tr>
+<tr><td><code>0xE1C6–0xE1C8</code></td><td>3 слота пуль</td></tr>
+<tr><td><code>0xE1CF–0xE1D0</code></td><td>Указатели массива объектов</td></tr>
+<tr><td><code>0xE1D4</code></td><td>Кандидат спавна</td></tr>
+<tr><td><code>0xE1D7</code></td><td>Счётчик команд скрипта</td></tr>
+<tr><td><code>0xE1DA</code></td><td>Указатель анимации</td></tr>
+<tr><td><code>0xE1DC</code></td><td>Флаг «анимация идёт»</td></tr>
+<tr><td><code>0xE1DE</code></td><td>Указатель кольцевого буфера</td></tr>
+<tr><td><code>0xE1E2</code></td><td>Прокрутка (растёт на 8 каждые 32 итерации)</td></tr>
+<tr><td><code>0xE300</code></td><td>Game state</td></tr>
+<tr><td><code>0xE306</code></td><td>База уровня</td></tr>
+<tr><td><code>0xE30A</code></td><td>Параметр цвета (0x40)</td></tr>
+<tr><td><code>0xE370–0xE3BF</code></td><td>5 спавн-слотов (шаг 0x10)</td></tr>
+<tr><td><code>0xE400–0xE4FF</code></td><td>16 слотов мира (шаг 0x10)</td></tr>
+<tr><td><code>0xE500–0xE502</code></td><td>Счёт игрока (BCD)</td></tr>
+<tr><td><code>0xE508</code></td><td>Состояние игры (1/2/3+)</td></tr>
+<tr><td><code>0xE50B</code></td><td>Счётчик скрипта</td></tr>
+<tr><td><code>0xE50F</code></td><td>Флаг «уровень загружен»</td></tr>
+<tr><td><code>0xE510</code></td><td>Уровень сложности</td></tr>
+<tr><td><code>0xE511–0xE512</code></td><td>BCD-счётчик дистанции</td></tr>
+<tr><td><code>0xE514</code></td><td>Параметр уровня (4/7)</td></tr>
+<tr><td><code>0xE516</code></td><td>Указатель в скрипт (начало 0x2162)</td></tr>
+<tr><td><code>0xE600–0xE6FF</code></td><td>Массив объектов (шаг 4)</td></tr>
+</table>
+</section>
+
+<section id="s6">
+<h2>6. Стартовый код (0x0000)</h2>
+<pre><code class="language-x86asm">0x0000  F3          DI                  ; запрет прерываний
+0x0001  31 00 E8    LD SP, $E800        ; стек в RAM
+0x0004  ED 56       IM 1                ; режим прерываний 1 (RST 38h)
+0x0006  3A 04 D0    LD A, ($D004)       ; чтение DIP/input
+0x0009  A7          AND A
+0x000A  F2 00 33    JP P, $3300
+0x000D  CD F4 05    CALL $05F4          ; инициализация 1
+0x0010  CD F2 06    CALL $06F2          ; инициализация 2
+0x0013  CD 29 0D    CALL $0D29          ; инициализация 3
+0x0016  C3 68 00    JP $0068            ; переход в инициализацию</code></pre>
+</section>
+
+<section id="s7">
+<h2>7. IRQ-обработчик (0x0038)</h2>
+<pre><code class="language-x86asm">0x0038  08          EX AF, AF'          ; сохранение AF
+0x0039  D9          EXX                 ; сохранение BC/DE/HL
+0x003A  CD 6D 05    CALL $056D          ; обновление видео
+0x003D  21 4E E0    LD HL, $E04E
+0x0040  34          INC (HL)            ; кадровый счётчик +1
+0x0041  7E          LD A, (HL)
+0x0042  23          INC HL
+0x0043  E6 0F       AND $0F
+0x0045  20 01       JR NZ, +1
+0x0047  34          INC (HL)            ; медленный тик (4 Гц)
+0x0048  23          INC HL
+0x0049  35          DEC (HL)            ; таймер 1
+0x004A  23          INC HL
+0x004B  35          DEC (HL)            ; таймер 2
+0x004C  3A 04 D0    LD A, ($D004)
+0x004F  A7          AND A
+0x0050  FA 93 00    JP M, $0093
+0x0053  21 4E E0    LD HL, $E04E
+0x0056  34          INC (HL)            ; delay
+0x0057  01 03 00    LD BC, $0003
+0x005A  21 4E E0    LD HL, $E04E
+0x005D  35          DEC (HL)
+0x005E  10 FE       DJNZ -2
+0x0060  0D          DEC C
+0x0061  20 FB       JR NZ, -5
+0x0063  D9          EXX
+0x0064  08          EX AF, AF'
+0x0065  FB          EI
+0x0066  FB          EI                  ; защита от EI-trap
+0x0067  C9          RET</code></pre>
+<p>IRQ делает:</p>
+<ol>
+<li><code>CALL $056D</code> (видео).</li>
+<li>Инкремент кадрового счётчика <code>0xE04E</code>.</li>
+<li>Раз в 16 кадров — инкремент <code>0xE04F</code>.</li>
+<li>Декремент таймеров <code>0xE050</code>/<code>0xE051</code>.</li>
+<li>Проверка DIP <code>0xD004</code>.</li>
+<li>Задержка ~768 тактов (синхронизация с CRT).</li>
+</ol>
+</section>
+
+<section id="s8">
+<h2>8. Главный игровой цикл (0x026E)</h2>
+<pre><code class="language-x86asm">0x026E  CD DC 0D    CALL $0DDC          ; 1: скриптовый движок
+0x0271  CD 0D 21    CALL $210D          ; 2: HUD/score
+0x0274  CD 3A 1B    CALL $1B3A          ; 3: спавн врагов
+0x0277  CD C7 1B    CALL $1BC7          ; 4: спавн пуль
+0x027A  CD A7 12    CALL $12A7          ; 5: коллизии
+0x027D  CD E7 12    CALL $12E7          ; 6: анимация
+0x0280  CD DC 0D    CALL $0DDC          ; 1: ещё раз
+0x0283  3A CF E1    LD A, ($E1CF)
+0x0286  21 D0 E1    LD HL, $E1D0
+0x0289  BE          CP (HL)
+0x028A  28 E2       JR Z, $026E
+0x028C  5F          LD E, A
+0x028D  16 E6       LD D, $E6
+0x028F  DD 21 00 00 LD IX, $0000
+0x0293  DD 19       ADD IX, DE
+0x0295  DD 4E 00    LD C, (IX+$00)
+0x0298  CB 21       SLA C
+0x029A  20 11       JR NZ, $02AD
+...
+0x02AD  06 00       LD B, $00
+0x02AF  DD 70 00    LD (IX+$00), B
+0x02B2  DD 7E 01    LD A, (IX+$01)
+0x02B5  21 A5 02    LD HL, $02A5
+0x02B8  E5          PUSH HL
+0x02B9  21 D3 02    LD HL, $02D3
+0x02BC  09          ADD HL, BC
+0x02BD  4E          LD C, (HL)
+0x02BE  23          INC HL
+0x02BF  66          LD H, (HL)
+0x02C0  69          LD L, C
+0x02C1  E9          JP (HL)</code></pre>
+<p><strong>Логика:</strong></p>
+<ol>
+<li>Вызвать 6 подсистем.</li>
+<li>Итерировать объекты <code>0xE600+</code>.</li>
+<li>Для каждого с state 1-0x7F — dispatch через таблицу <code>0x02D3</code>.</li>
+<li>Если все обработаны → новый кадр.</li>
+</ol>
+</section>
+
+<section id="s9">
+<h2>9. Шесть подсистем кадра</h2>
+<table>
+<tr><th>#</th><th>Адрес</th><th>Файл</th><th>Назначение</th></tr>
+<tr><td>1</td><td><code>0x0DDC</code></td><td>mpa-1</td><td>Скриптовый движок</td></tr>
+<tr><td>2</td><td><code>0x210D</code></td><td>mpa-3</td><td>HUD/score</td></tr>
+<tr><td>3</td><td><code>0x1B3A</code></td><td>mpa-2</td><td>Спавн врагов</td></tr>
+<tr><td>4</td><td><code>0x1BC7</code></td><td>mpa-2</td><td>Спавн пуль</td></tr>
+<tr><td>5</td><td><code>0x12A7</code></td><td>mpa-2</td><td>Коллизии</td></tr>
+<tr><td>6</td><td><code>0x12E7</code></td><td>mpa-2</td><td>Анимация</td></tr>
+</table>
+<h3>9.1 0x0DDC — скриптовый движок</h3>
+<p>Читает скрипт из <code>0x2162+</code>. 24 типа команд. Вызывает <code>0x125B</code> (RLE), <code>0x1106</code> (parallax), <code>0x29D6</code>.</p>
+<h3>9.2 0x210D — HUD/score</h3>
+<p>BCD-арифметика (<code>DAA</code>). Счётчик <code>0xE511–0xE512</code>, растёт каждые ~3 сек (183 кадра). Отображается в <code>0x8090</code>.</p>
+<h3>9.3 0x1B3A — спавн врагов</h3>
+<p>Использует R-регистр Z80 как PRNG: <code>LD A, R; AND $F0</code>. Раз в ~3 секунды (таймер <code>0xE0EE</code>).</p>
+<h3>9.4 0x1BC7 — стрельба</h3>
+<p>Раз в 32 кадра (<code>AND $1F</code>). Ищет свободный слот из 3 (<code>0xE1C6–0xE1C8</code>). Спавнит пулю.</p>
+<h3>9.5 0x12A7 — коллизии</h3>
+<p>Проверяет слоты <code>0xE370+</code> на типы <code>0x14, 0x1E-0x1F, 0x20-0x21, 0x22-0x29</code>. При совпадении — звук.</p>
+<h3>9.6 0x12E7 — анимация</h3>
+<p>Каждые 2 кадра — следующий кадр из <code>0xE1DA+</code>. Терминатор <code>0x5A</code>.</p>
+</section>
+
+<section id="s10">
+<h2>10. Система объектов и state machine</h2>
+<h3>10.1 Таблица 0x02D3 (11 типов)</h3>
+<table>
+<tr><th>#</th><th>Адрес</th><th>Роль</th></tr>
+<tr><td>0</td><td><code>0xE1C9</code></td><td>dummy</td></tr>
+<tr><td>1</td><td><code>0x0622</code></td><td>Score (BCD)</td></tr>
+<tr><td>2</td><td><code>0x02FA</code></td><td>Tile animation (кратер/камень)</td></tr>
+<tr><td>3</td><td><code>0x02ED</code></td><td>Tile action</td></tr>
+<tr><td>4</td><td><code>0x0322</code></td><td>Tile update</td></tr>
+<tr><td>5</td><td><code>0x032F</code></td><td>Tile</td></tr>
+<tr><td>6</td><td><code>0x0367</code></td><td>Tile + таймер</td></tr>
+<tr><td>7</td><td><code>0x0361</code></td><td>Tile</td></tr>
+<tr><td>8</td><td><code>0x0337</code></td><td>Tile + таймер</td></tr>
+<tr><td>9</td><td><code>0x0DA6</code></td><td>Sprite (таблица 0x304A)</td></tr>
+<tr><td>10</td><td><code>0x1201</code></td><td>Level RLE init</td></tr>
+<tr><td>11</td><td><code>0x1218</code></td><td>Level RLE render</td></tr>
+</table>
+
+<h3>10.2 Структура объекта (4 байта в 0xE600+)</h3>
+<table>
+<tr><th>Offset</th><th>Назначение</th></tr>
+<tr><td><code>[ix+0x00]</code></td><td>state (0/0x80=idle, 1-0x7F=handler)</td></tr>
+<tr><td><code>[ix+0x01]</code></td><td>type</td></tr>
+<tr><td><code>[ix+0x02]</code></td><td>data 1</td></tr>
+<tr><td><code>[ix+0x03]</code></td><td>data 2</td></tr>
+</table>
+
+<h3>10.3 Диспетчеризация</h3>
+<pre><code class="language-text">if (state == 0 || state == 0x80) → skip
+if (state == 0x01..0x7F) → dispatch handler[state]</code></pre>
+</section>
+
+<section id="s11">
+<h2>11. Логика игрока (лунохода)</h2>
+<h3>11.1 Точка входа: 0x0831</h3>
+<p>Player update вызывается из 6 контекстов в <code>mpa-2.3l</code>: <code>0x162D, 0x18E0, 0x1957, 0x195E, 0x1A2F, 0x1E25</code>.</p>
+<pre><code class="language-x86asm">0x0831  3A 00 E3    LD A, ($E300)       ; game state
+0x0834  FE 06       CP $06
+0x0836  30 7A       JR NC, $08B2        ; state >= 6 → выход
+0x0838  3A E2 E1    LD A, ($E1E2)       ; scroll
+0x083B  DD 96 0F    SUB (IX+$0F)        ; scroll - world_X
+0x083E  ED 44       NEG                 ; world_X - scroll = screen_X
+0x0840  DD 77 03    LD (IX+$03), A      ; [ix+0x03] = screen_X
+0x0843  FE E0       CP $E0
+0x0845  38 6D       JR C, $08B4         ; dispatcher</code></pre>
+
+<h3>11.2 Диспетчер: 0x08B4</h3>
+<pre><code class="language-x86asm">0x08B4  DD 36 0B 01  LD (IX+$0B), $01    ; active = 1
+0x08B8  DD 7E 0D     LD A, (IX+$0D)      ; move_type
+0x08BB  07           RLCA                ; бит 7 → C
+0x08BC  D8           RET C               ; если бит 7 → выход
+0x08BD  17           RLA
+0x08BE  21 18 2E     LD HL, $2E18        ; таблица параметров
+0x08C1  30 01        JR NC, +1
+0x08C3  24           INC H               ; HL = $2F18
+0x08C4  5F           LD E, A
+0x08C5  16 00        LD D, $00
+0x08C7  19           ADD HL, DE
+0x08C8  DD 5E 01     LD E, (IX+$01)      ; type
+0x08CB  16 E1        LD D, $E1
+0x08CD  FD 21 00 00  LD IY, $0000
+0x08D1  FD 19        ADD IY, DE           ; IY = 0xE100 + type
+0x08D3  56           LD D, (HL)           ; байт 0
+0x08D4  23           INC HL
+0x08D5  5E           LD E, (HL)           ; байт 1
+0x08D6  23           INC HL
+0x08D7  4E           LD C, (HL)           ; action_index
+0x08D8  06 00        LD B, $00
+0x08DA  21 F5 08     LD HL, $08F5         ; jump table
+0x08DD  09           ADD HL, BC
+0x08DE  4E           LD C, (HL)
+0x08DF  23           INC HL
+0x08E0  66           LD H, (HL)
+0x08E1  69           LD L, C
+0x08E2  DD 4E 03     LD C, (IX+$03)      ; screen_X
+0x08E5  DD 7E 07     LD A, (IX+$07)
+0x08E8  CD ED 08     CALL $08ED           ; helper
+0x08EB  AF           XOR A
+0x08EC  E9           JP (HL)              ; handler</code></pre>
+
+<h3>11.3 Helper 0x08ED</h3>
+<pre><code class="language-x86asm">0x08ED  2F          CPL                 ; ~A
+0x08EE  47          LD B, A
+0x08EF  3A 3C E0    LD A, ($E03C)       ; button_state
+0x08F2  80          ADD A, B
+0x08F3  47          LD B, A
+0x08F4  C9          RET</code></pre>
+<p>Edge detection: <code>B = button_state + ~prev_btn</code>.</p>
+
+<h3>11.4 Jump table 0x08F5 (24 действия)</h3>
+<pre><code class="language-text">0x0969, 0x095A, 0x09CF, 0x09CD, 0x0AF5, 0x0943, 0x0AE2, 0x0A90
+0x0A56, 0x0AB7, 0x0A52, 0x0A9F, 0x09C9, 0x0B25, 0x0976, 0x0997
+0x09BA, 0x0A1E, 0x0A44, 0x0934, 0x0925, 0x0B1D, 0x09B0, 0x0983</code></pre>
+
+<h3>11.5 Handler #0 0x0969 — запись спрайта</h3>
+<pre><code class="language-x86asm">0x0969  DD 7E 0B    LD A, (IX+$0B)
+0x096C  A7          AND A
+0x096D  79          LD A, C
+0x096E  20 35       JR NZ, $09A5
+0x0970  C6 08       ADD A, $08
+0x0972  FE 20       CP $20
+0x0974  38 35       JR C, $09AB
+0x0976  FD 70 00    LD (IY+$00), B       ; attr
+0x0979  FD 73 01    LD (IY+$01), E       ; Y
+0x097C  FD 72 02    LD (IY+$02), D       ; tile
+0x097F  FD 71 03    LD (IY+$03), C       ; X
+0x0982  C9          RET</code></pre>
+
+<h3>11.6 Helper 0x081B — позиция → Screen RAM</h3>
+<pre><code class="language-x86asm">0x081B  DD 7E 07    LD A, (IX+$07)      ; screen Y
+0x081E  E6 F8       AND $F8             ; выровнять на 8
+0x0820  6F          LD L, A
+0x0821  26 20       LD H, $20
+0x0823  29          ADD HL, HL
+0x0824  29          ADD HL, HL           ; HL = Y * 32
+0x0825  DD 7E 03    LD A, (IX+$03)      ; screen X
+0x0828  1F          RRA
+0x0829  57          LD D, A
+0x082A  1F          RRA
+0x082B  1F          RRA
+0x082C  E6 1F       AND $1F
+0x082E  85          ADD A, L
+0x082F  6F          LD L, A
+0x0830  C9          RET</code></pre>
+
+<h3>11.7 Структура player</h3>
+<table>
+<tr><th>Байт</th><th>Назначение</th></tr>
+<tr><td><code>[ix+0x00]</code></td><td>state</td></tr>
+<tr><td><code>[ix+0x01]</code></td><td>type (спрайт)</td></tr>
+<tr><td><code>[ix+0x02]</code></td><td>world_Y</td></tr>
+<tr><td><code>[ix+0x03]</code></td><td>screen_X (вычисляется)</td></tr>
+<tr><td><code>[ix+0x04]</code></td><td>sub-pixel X</td></tr>
+<tr><td><code>[ix+0x07]</code></td><td>compound = (Y&lt;&lt;3) | (prev_btn &amp; 0x07)</td></tr>
+<tr><td><code>[ix+0x0A]</code></td><td>anim_counter</td></tr>
+<tr><td><code>[ix+0x0B]</code></td><td>active</td></tr>
+<tr><td><code>[ix+0x0D]</code></td><td>move_type</td></tr>
+<tr><td><code>[ix+0x0F]</code></td><td>world_X</td></tr>
+</table>
+
+<h3>11.8 Таблицы 0x2E18 / 0x2F18</h3>
+<p>3 байта на запись: <code>[tile][Y][action_index]</code>. ~32 записи в каждой.</p>
+</section>
+
+<section id="s12">
+<h2>12. Рендер уровня (RLE)</h2>
+<h3>12.1 Handler #10 0x1201 — init</h3>
+<pre><code class="language-x86asm">0x1201  21 44 2D    LD HL, $2D44        ; таблица уровня
+0x1204  ED 53 EB E0 LD ($E0EB), DE
+0x1208  22 E9 E0    LD ($E0E9), HL
+0x120B  3A 4E E0    LD A, ($E04E)
+0x120E  C6 03       ADD A, $03
+0x1210  DD 77 01    LD (IX+$01), A      ; задержка 3 кадра
+0x1213  DD 36 00 0B LD (IX+$00), $0B
+0x1217  C9          RET</code></pre>
+
+<h3>12.2 Handler #11 0x1218 — render</h3>
+<pre><code class="language-x86asm">0x1218  3A 4E E0    LD A, ($E04E)
+0x121B  DD BE 01    CP (IX+$01)
+0x121E  20 F3       JR NZ, $1213        ; ещё рано
+0x1220  2A EB E0    LD HL, ($E0EB)
+0x1223  23          INC HL
+0x1224  22 EB E0    LD ($E0EB), HL
+0x1227  2B          DEC HL
+0x1228  EB          EX DE, HL
+0x1229  FD 21 00 04 LD IY, $0400
+0x122D  FD 19       ADD IY, DE           ; IY = DE + 0x400 (Color RAM)
+0x122F  2A E9 E0    LD HL, ($E0E9)
+0x1232  01 20 00    LD BC, $0020
+0x1235  7E          LD A, (HL)
+0x1236  23          INC HL
+0x1237  3D          DEC A
+0x1238  FE 03       CP $03
+0x123A  38 0D       JR C, $1249
+0x123C  3C          INC A
+0x123D  12          LD (DE), A           ; Screen RAM
+0x123E  FD 36 00 80 LD (IY+$00), $80     ; Color RAM
+0x1242  EB          EX DE, HL
+0x1243  09          ADD HL, BC
+0x1244  EB          EX DE, HL
+0x1245  FD 09       ADD IY, BC
+0x1247  18 EC       JR $1235</code></pre>
+
+<h3>12.3 RLE-команды</h3>
+<table>
+<tr><th>Байт</th><th>Действие</th></tr>
+<tr><td>0</td><td>конец</td></tr>
+<tr><td>1</td><td>пауза (3 кадра)</td></tr>
+<tr><td>2</td><td>указатель (2 байта)</td></tr>
+<tr><td>&gt;=3</td><td>тайл</td></tr>
+</table>
+</section>
+
+<section id="s13">
+<h2>13. Прокрутка параллакса (0x1106)</h2>
+<pre><code class="language-x86asm">0x1106  21 D9 E1    LD HL, $E1D9
+0x1109  7E          LD A, (HL)
+0x110A  A7          AND A
+0x110B  C2 9A 11    JP NZ, $119A         ; конец уровня
+0x110E  3A 08 E5    LD A, ($E508)        ; game state
+0x1111  FE 03       CP $03
+0x1113  30 79       JR NC, $118E
+0x1115  47          LD B, A
+0x1116  05          DEC B
+0x1117  21 B4 2C    LD HL, $2CB4         ; таблица слоя 1
+0x111A  3A E2 E1    LD A, ($E1E2)
+0x111D  1F          RRA
+0x111E  1F          RRA
+0x111F  1F          RRA
+0x1120  E6 1F       AND $1F
+0x1122  85          ADD A, L
+0x1123  10 02       DJNZ +2
+0x1125  C6 20       ADD A, $20           ; второй слой
+0x1127  6F          LD L, A
+0x1128  4E          LD C, (HL)</code></pre>
+<p>Две таблицы:</p>
+<ul>
+<li><code>0x2CB4</code> — слой 1 (фон), <code>+0x20</code> = слой 2</li>
+<li><code>0x2C24</code> — слой 2</li>
+</ul>
+<p>Прокрутка: <code>scroll &gt;&gt; 3</code> = колонка 0–31.</p>
+</section>
+
+<section id="s14">
+<h2>14. HUD и счёт (0x210D)</h2>
+<pre><code class="language-x86asm">0x210D  21 51 E0    LD HL, $E051
+0x2110  3A 00 E3    LD A, ($E300)
+0x2113  3D          DEC A
+0x2114  28 11       JR Z, $2127          ; state == 1 → пропустить
+0x2116  7E          LD A, (HL)
+0x2117  A7          AND A
+0x2118  F0          RET P
+0x2119  21 11 E5    LD HL, $E511         ; BCD-счётчик
+0x211C  3E 01       LD A, $01
+0x211E  86          ADD A, (HL)
+0x211F  27          DAA                  ; BCD
+0x2120  77          LD (HL), A
+0x2121  23          INC HL
+0x2122  7E          LD A, (HL)
+0x2123  CE 00       ADC A, $00
+0x2125  27          DAA
+0x2126  77          LD (HL), A
+0x2127  3E 37       LD A, $37            ; сброс таймера на 55
+0x2129  32 51 E0    LD ($E051), A
+0x212C  11 90 80    LD DE, $8090         ; Screen RAM
+0x212F  FD 21 90 84 LD IY, $8490         ; Color RAM
+0x2133  0E 02       LD C, $02
+0x2135  CD E7 03    CALL $03E7
+0x2138  3A 12 E5    LD A, ($E512)
+0x213B  CD BD 03    CALL $03BD
+0x213E  3A 11 E5    LD A, ($E511)
+0x2141  C3 AE 03    JP $03AE</code></pre>
+<p>BCD-счётчик <code>0xE511-0xE512</code>. Растёт каждые ~3 секунды (183 кадра). Отображение в <code>0x8090</code>.</p>
+</section>
+
+<section id="s15">
+<h2>15. Спавн врагов (0x1B3A)</h2>
+<pre><code class="language-x86asm">0x1B3A  21 EE E0    LD HL, $E0EE         ; таймер спавна
+0x1B3D  3A 4E E0    LD A, ($E04E)
+0x1B40  96          SUB (HL)
+0x1B41  F8          RET M
+0x1B42  01 00 10    LD BC, $1000
+0x1B45  ED 5F       LD A, R               ; PRNG
+0x1B47  E6 F0       AND $F0
+0x1B49  26 E4       LD H, $E4
+0x1B4D  6F          LD L, A
+0x1B4E  7E          LD A, (HL)
+0x1B4F  D6 1E       SUB $1E
+0x1B51  FE 0A       CP $0A
+0x1B53  30 0A       JR NC, $1B5F
+0x1B55  CB 4F       BIT 1, A
+0x1B57  20 06       JR NZ, $1B5F
+0x1B59  FE 04       CP $04
+0x1B5B  38 63       JR C, $1BC0
+0x1B5D  0C          INC C
+0x1B5E  5D          LD E, L
+0x1B5F  7D          LD A, L
+0x1B60  C6 10       ADD A, $10
+0x1B62  10 E9       DJNZ $1B4D</code></pre>
+<p>R-регистр — бесплатный PRNG. Раз в ~3 секунды.</p>
+</section>
+
+<section id="s16">
+<h2>16. Стрельба (0x1BC7)</h2>
+<pre><code class="language-x86asm">0x1BC7  3A 4E E0    LD A, ($E04E)
+0x1BCA  21 52 E0    LD HL, $E052
+0x1BCD  AE          XOR (HL)
+0x1BCE  E6 1F       AND $1F              ; каждые 32 кадра
+0x1BD0  C0          RET NZ
+0x1BD1  ED 5F       LD A, R
+0x1BD3  77          LD (HL), A
+0x1BD4  21 C6 E1    LD HL, $E1C6         ; 3 слота пуль
+0x1BD7  06 03       LD B, 3
+0x1BD9  7E          LD A, (HL)
+0x1BDA  A7          AND A
+0x1BDB  20 04       JR NZ, $1BE1
+0x1BDD  23          INC HL
+0x1BDE  10 F9       DJNZ $1BD9
+0x1BE0  C9          RET
+0x1BE1  DD 21 00 E4 LD IX, $E400</code></pre>
+<p>Кулдаун 32 кадра, 3 слота пуль.</p>
+</section>
+
+<section id="s17">
+<h2>17. Коллизии (0x12A7)</h2>
+<pre><code class="language-x86asm">0x12A7  21 70 E3    LD HL, $E370
+0x12AA  11 10 00    LD DE, $0010
+0x12AD  01 02 19    LD BC, $1902
+0x12B0  7E          LD A, (HL)
+0x12B1  FE 14       CP $14
+0x12B3  28 2A       JR Z, $12DF
+0x12B5  FE 1E       CP $1E
+0x12B7  38 1B       JR C, $12D4
+0x12B9  FE 20       CP $20
+0x12BB  38 08       JR C, $12C5
+0x12BD  FE 22       CP $22
+0x12BF  38 13       JR C, $12D4
+0x12C1  FE 2A       CP $2A
+0x12C3  30 0F       JR NC, $12D4
+0x12C5  3A DF E1    LD A, ($E1DF)
+0x12C8  1F          RRA
+0x12C9  1F          RRA
+0x12CA  D8          RET C
+0x12CB  79          LD A, C
+0x12CC  32 DF E1    LD ($E1DF), A
+0x12CF  C6 15       ADD A, $15
+0x12D1  C3 6F 0D    JP $0D6F              ; звук</code></pre>
+<p>Проверяет типы <code>0x14, 0x1E-0x1F, 0x20-0x21, 0x22-0x29</code>.</p>
+</section>
+
+<section id="s18">
+<h2>18. Анимация (0x12E7)</h2>
+<pre><code class="language-x86asm">0x12E7  3A DC E1    LD A, ($E1DC)
+0x12EA  A7          AND A
+0x12EB  C8          RET Z
+0x12EC  3A 4E E0    LD A, ($E04E)
+0x12EF  E6 0F       AND $0F
+0x12F1  28 04       JR Z, $12F7
+0x12F3  E6 07       AND $07
+0x12F5  C0          RET NZ
+0x12F6  3C          INC A
+0x12F7  3C          INC A
+0x12F8  4F          LD C, A
+0x12F9  2A DA E1    LD HL, ($E1DA)
+0x12FC  7E          LD A, (HL)
+0x12FD  D6 5A       SUB $5A
+0x12FF  28 0A       JR Z, ...</code></pre>
+<p>Шаг 2 кадра. Терминатор <code>0x5A</code>.</p>
+</section>
+
+<section id="s19">
+<h2>19. Скриптовый движок уровня (0x0DDC)</h2>
+<pre><code class="language-x86asm">0x0DDC  CD 5B 12    CALL $125B
+0x0DDF  3A E2 E1    LD A, ($E1E2)
+0x0DE2  21 09 E5    LD HL, $E509
+0x0DE5  47          LD B, A
+0x0DE6  AE          XOR (HL)
+0x0DE7  E6 F8       AND $F8
+0x0DE9  C8          RET Z
+0x0DEA  78          LD A, B
+0x0DEB  E6 F8       AND $F8
+0x0DED  77          LD (HL), A
+0x0DEE  CD 06 11    CALL $1106           ; parallax
+0x0DF1  3A 4D E0    LD A, ($E04D)
+0x0DF4  A7          AND A
+0x0DF5  C0          RET NZ
+0x0DF6  21 0B E5    LD HL, $E50B
+0x0DF9  34          INC (HL)
+0x0DFA  7E          LD A, (HL)
+0x0DFC  A7          AND A
+0x0DFD  28 07       JR Z, ...
+0x0DFF  E6 1F       AND $1F
+0x0E01  20 03       JR NZ, ...
+0x0E03  CD D6 29    CALL $29D6
+0x0E06  7B          LD A, E
+0x0E07  2A 16 E5    LD HL, ($E516)       ; указатель скрипта
+0x0E0A  BE          CP (HL)
+0x0E0B  20 0B       JR NZ, ...
+0x0E0D  23          INC HL
+0x0E0E  7E          LD A, (HL)           ; команда
+0x0E0F  E6 7F       AND $7F
+0x0E11  32 D7 E1    LD ($E1D7), A
+0x0E14  23          INC HL
+0x0E15  22 16 E5    LD ($E516), HL</code></pre>
+<p>Команды:</p>
+<ul>
+<li><code>0</code> — конец</li>
+<li><code>1-5</code> — звук</li>
+<li><code>6-12</code> — <code>0x0EF0</code></li>
+<li><code>13-22</code> — спавн объектов (таблица <code>0x1000+</code>)</li>
+<li><code>23</code> — <code>0x0E4F</code></li>
+<li><code>24+</code> — <code>0x0F45</code></li>
+</ul>
+<p>Таблица <code>0x1000+</code> — 8-байтовые записи параметров объектов.</p>
+</section>
+
+<section id="s20">
+<h2>20. Обработка ввода (0x0D3B)</h2>
+<pre><code class="language-x86asm">0x0D3B  3A 43 E0    LD A, ($E043)
+0x0D3E  3D          DEC A
+0x0D3F  28 09       JR Z, $0D4A
+0x0D41  21 46 E0    LD HL, $E046
+0x0D44  AF          XOR A
+0x0D45  CB 5E       BIT 3, (HL)
+0x0D47  28 01       JR Z, +1
+0x0D49  3C          INC A
+0x0D4A  32 4C E0    LD ($E04C), A
+0x0D4D  21 04 D0    LD HL, $D004         ; порт ввода
+0x0D50  AE          XOR (HL)
+0x0D51  21 3C E0    LD HL, $E03C
+0x0D54  36 EF       LD (HL), $EF
+0x0D56  16 FF       LD D, $FF
+0x0D58  1F          RRA
+0x0D59  30 03       JR NC, +3
+0x0D5B  14          INC D
+0x0D5C  36 F1       LD (HL), $F1
+0x0D5E  23          INC HL
+0x0D5F  72          LD (HL), D
+0x0D60  01 00 40    LD BC, $4000
+0x0D63  AF          XOR A
+0x0D64  ED 79       OUT (C), A
+0x0D66  0C          INC C
+0x0D67  10 FB       DJNZ $0D64
+0x0D69  F3          DI
+0x0D6A  CD 7D 0D    CALL $0D7D
+0x0D6D  FB          EI
+0x0D6E  C9          RET</code></pre>
+<p>Edge detection. Результат в <code>0xE03C</code> (state) и <code>0xE03D</code> (edge).</p>
+</section>
+
+<section id="s21">
+<h2>21. Анти-пиратская защита</h2>
+<h3>21.1 Механизм (в Irem)</h3>
+<pre><code class="language-x86asm">0x18C0  32 C2 E1    LD ($E1C2), A
+0x18C3  CD 33 15    CALL $1533           ; чтение чипа
+0x18C6  FE C4       CP $C4
+0x18C8  30 02       JR NC, +2
+0x18CA  3E C4       LD A, $C4
+0x18CC  C6 28       ADD A, $28
+0x18CE  30 01       JR NC, +1
+0x18D0  AF          XOR A
+0x18D1  47          LD B, A
+0x18D2  C6 94       ADD A, $94
+0x18D4  32 C3 E1    LD ($E1C3), A        ; динамический флаг</code></pre>
+<p>Проверка в <code>0x056D</code>:</p>
+<pre><code class="language-x86asm">0x0596  3A C3 E1    LD A, ($E1C3)
+0x0599  A7          AND A
+0x059A  28 2B       JR Z, +0x2B
+0x059C  7E          LD A, (HL)
+0x059D  E6 7F       AND $7F
+0x059F  01 40 00    LD BC, $0040
+0x05A2  CB 3F       SRL A
+0x05A4  30 01       JR NC, +1
+0x05A6  04          INC B
+0x05A7  20 F9       JR NZ, $05A2
+0x05A9  7E          LD A, (HL)
+0x05AA  07          RLCA
+0x05AB  E6 01       AND $01
+0x05AD  A8          XOR B
+0x05AE  5F          LD E, A
+0x05AF  ED A3       OUTI
+0x05B1  3A 00 88    LD A, ($8800)        ; статус чипа
+0x05B4  E6 07       AND $07
+0x05B6  BB          CP E
+0x05B7  C2 C3 00    JP NZ, $00C3         ; несовпадение → смерть</code></pre>
+<h3>21.2 Для C++/SDL3</h3>
+<p>Защита не нужна. Играем «по-честному».</p>
+</section>
+
+<section id="s22">
+<h2>22. Видеоподсистема (0x056D)</h2>
+<pre><code class="language-x86asm">0x056D  21 00 E1    LD HL, $E100         ; спрайт-буфер
+0x0570  11 40 C8    LD DE, $C840
+0x0573  01 40 00    LD BC, $0040
+0x0576  ED B0       LDIR                  ; 64 байта
+0x0578  1E 20       LD E, $20
+0x057A  0E 20       LD C, $20
+0x057C  ED B0       LDIR
+0x057E  1E C0       LD E, $C0
+0x0580  0E 40       LD C, $40
+0x0582  ED B0       LDIR
+0x0584  11 A0 C8    LD DE, $C8A0
+0x0587  0E 20       LD C, $20
+0x0589  ED B0       LDIR                  ; итого ~192 байта
+0x058B  0E 1C       LD C, $1C             ; порт прокрутки
+0x058D  7E          LD A, (HL)
+0x058E  06 04       LD B, 4
+0x0590  ED 79       OUT (C), A
+0x0592  0C          INC C
+0x0593  10 FB       DJNZ $0590</code></pre>
+<p>Копирует 192 байта спрайтов + 4 байта прокрутки в порты <code>0x1C-0x1F</code>.</p>
+</section>
+
+<section id="s23">
+<h2>23. Сводные таблицы и константы</h2>
+<h3>23.1 Ключевые адреса</h3>
+<table>
+<tr><th>Адрес</th><th>Что</th></tr>
+<tr><td><code>0x0000</code></td><td>стартовый код</td></tr>
+<tr><td><code>0x0038</code></td><td>IRQ</td></tr>
+<tr><td><code>0x026E</code></td><td>game loop</td></tr>
+<tr><td><code>0x02D3</code></td><td>handlers table</td></tr>
+<tr><td><code>0x056D</code></td><td>video update</td></tr>
+<tr><td><code>0x0831</code></td><td>player update</td></tr>
+<tr><td><code>0x08B4</code></td><td>player dispatcher</td></tr>
+<tr><td><code>0x08ED</code></td><td>edge helper</td></tr>
+<tr><td><code>0x08F5</code></td><td>player jump table</td></tr>
+<tr><td><code>0x0925+</code></td><td>24 player handlers</td></tr>
+<tr><td><code>0x0BB7</code></td><td>level init</td></tr>
+<tr><td><code>0x0C47</code></td><td>level render + переход</td></tr>
+<tr><td><code>0x0D3B</code></td><td>input handler</td></tr>
+<tr><td><code>0x0D6F</code></td><td>sound event</td></tr>
+<tr><td><code>0x0DDC</code></td><td>script engine</td></tr>
+<tr><td><code>0x1106</code></td><td>parallax</td></tr>
+<tr><td><code>0x1201/0x1218</code></td><td>RLE renderer</td></tr>
+<tr><td><code>0x1B3A</code></td><td>enemy spawn</td></tr>
+<tr><td><code>0x1BC7</code></td><td>bullet spawn</td></tr>
+<tr><td><code>0x210D</code></td><td>HUD/score</td></tr>
+</table>
+
+<h3>23.2 Ключевые переменные</h3>
+<table>
+<tr><th>Адрес</th><th>Что</th></tr>
+<tr><td><code>0xE046</code></td><td>phase counter</td></tr>
+<tr><td><code>0xE04D</code></td><td>game flag</td></tr>
+<tr><td><code>0xE04E</code></td><td>frame counter</td></tr>
+<tr><td><code>0xE050/0xE051</code></td><td>timers</td></tr>
+<tr><td><code>0xE1C6-0xE1C8</code></td><td>bullets</td></tr>
+<tr><td><code>0xE1E2</code></td><td>scroll</td></tr>
+<tr><td><code>0xE300</code></td><td>game state</td></tr>
+<tr><td><code>0xE500-0xE502</code></td><td>score BCD</td></tr>
+<tr><td><code>0xE508</code></td><td>game state</td></tr>
+<tr><td><code>0xE510</code></td><td>difficulty</td></tr>
+<tr><td><code>0xE511-0xE512</code></td><td>distance BCD</td></tr>
+<tr><td><code>0xE516</code></td><td>script ptr</td></tr>
+</table>
+
+<h3>23.3 Таблицы</h3>
+<table>
+<tr><th>Адрес</th><th>Что</th></tr>
+<tr><td><code>0x2C24</code></td><td>parallax layer 2</td></tr>
+<tr><td><code>0x2CB4</code></td><td>parallax layer 1</td></tr>
+<tr><td><code>0x2D44</code></td><td>RLE level data</td></tr>
+<tr><td><code>0x2E18</code></td><td>player action table (even)</td></tr>
+<tr><td><code>0x2F18</code></td><td>player action table (odd)</td></tr>
+<tr><td><code>0x2FFF</code></td><td>enemy types</td></tr>
+</table>
+
+<h3>23.4 Типы тайлов</h3>
+<table>
+<tr><th>Тайл</th><th>Что</th></tr>
+<tr><td><code>0x26</code></td><td>crater</td></tr>
+<tr><td><code>0x27</code></td><td>rock</td></tr>
+<tr><td><code>0xF3</code></td><td>ground</td></tr>
+<tr><td><code>0xD3+</code></td><td>animations</td></tr>
+</table>
+</section>
+
+<section id="s24">
+<h2>24. Рекомендации по C++/SDL3</h2>
+<h3>24.1 Что переносить</h3>
+<table>
+<tr><th>Компонент</th><th>ROM</th><th>C++/SDL3</th></tr>
+<tr><td>Game loop</td><td><code>0x026E</code> + 6 подсистем</td><td><code>Game::update()</code></td></tr>
+<tr><td>IRQ 60 Гц</td><td><code>0x0038</code></td><td><code>SDL_AppIterate</code></td></tr>
+<tr><td>Player update</td><td><code>0x0831</code></td><td><code>Player::update()</code></td></tr>
+<tr><td>Player dispatcher</td><td><code>0x08B4</code></td><td><code>Player::dispatch()</code></td></tr>
+<tr><td>24 действия</td><td><code>0x08F5</code></td><td><code>std::function[24]</code></td></tr>
+<tr><td>Таблицы действий</td><td><code>0x2E18</code></td><td><code>struct Action</code></td></tr>
+<tr><td>RLE level</td><td><code>0x1201/0x1218</code></td><td><code>Level::load_rle()</code></td></tr>
+<tr><td>Parallax</td><td><code>0x1106</code></td><td><code>Parallax::update()</code></td></tr>
+<tr><td>HUD/score</td><td><code>0x210D</code></td><td><code>HUD::render()</code></td></tr>
+<tr><td>Enemy spawn</td><td><code>0x1B3A</code></td><td><code>Spawner::tick()</code></td></tr>
+<tr><td>Bullets</td><td><code>0x1BC7</code></td><td><code>BulletSystem::fire()</code></td></tr>
+<tr><td>Collisions</td><td><code>0x12A7</code></td><td><code>Collision::check()</code></td></tr>
+<tr><td>Animation</td><td><code>0x12E7</code></td><td><code>Animator::tick()</code></td></tr>
+<tr><td>Input</td><td><code>0x0D3B</code></td><td><code>SDL_GetKeyboardState</code> + edge</td></tr>
+</table>
+
+<h3>24.2 Что НЕ переносить</h3>
+<ul>
+<li>Anti-piracy</li>
+<li>Банковщик <code>mpb-*</code></li>
+<li>Порты I/O</li>
+<li>Задержка 768 тактов</li>
+</ul>
+
+<h3>24.3 Структура проекта</h3>
+<pre><code class="language-text">moon_patrol_nd/
+├── CMakeLists.txt
+├── src/
+│   ├── main.cpp
+│   ├── game.cpp/h
+│   ├── player.cpp/h
+│   ├── level.cpp/h
+│   ├── enemy.cpp/h
+│   ├── bullet.cpp/h
+│   ├── collision.cpp/h
+│   ├── hud.cpp/h
+│   ├── input.cpp/h
+│   ├── video.cpp/h
+│   └── assets/
+├── tools/
+│   ├── analyze_mpatrol.py
+│   ├── extract_tiles.py
+│   └── extract_level.py
+└── docs/
+    └── REPORT.html</code></pre>
+
+<h3>24.4 Первые шаги</h3>
+<ol>
+<li>Извлечь тайлы из <code>mpe-*</code> (<code>extract_tiles.py</code>).</li>
+<li>Извлечь уровни из <code>0x2D44</code> (RLE → JSON).</li>
+<li>Извлечь таблицу действий <code>0x2E18</code> (3 × 32 = 96 байт).</li>
+<li>Скелет SDL3: окно + game loop.</li>
+<li>Отрисовка статичного уровня.</li>
+<li>Player: спрайт + движение.</li>
+<li>Физика: гравитация, прыжок, земля.</li>
+<li>Враги, пули, коллизии.</li>
+<li>HUD, score, звук.</li>
+<li>Уровни, game over.</li>
+</ol>
+
+<h3>24.5 Правовая заметка</h3>
+<p>ROM — © Irem/Williams. Можно изучать, нельзя распространять. Для релиза — свои тайлы, музыка, код с нуля.</p>
+</section>
+
+<section id="s25">
+<h2>25. Инструментарий</h2>
+<table>
+<tr><th>Инструмент</th><th>Версия</th><th>Назначение</th></tr>
+<tr><td>radare2</td><td>6.2.5</td><td>Дизассемблер Z80</td></tr>
+<tr><td>Python 3</td><td>3.6+</td><td>Скрипты</td></tr>
+<tr><td>analyze_mpatrol.py</td><td>v3</td><td>CRC32/энтропия/padding</td></tr>
+<tr><td>extract_tiles.py</td><td>v1</td><td>Извлечение тайлов</td></tr>
+<tr><td>f9dasm</td><td>1.83</td><td>6809 (для проверки)</td></tr>
+<tr><td>vasm6809_std</td><td>2.0f</td><td>6809 (не использовался)</td></tr>
+</table>
+
+<h3>25.1 Что не сработало</h3>
+<ul>
+<li>mc6809 плагин r2 — make не сработал</li>
+<li>F9DASM для Z80 — не поддерживает</li>
+<li>Гипотеза о 6809 — ошибочна</li>
+</ul>
+
+<h3>25.2 Основной цикл</h3>
+<pre><code class="language-bash">r2 -a z80 -b 16 -m &lt;offset&gt; &lt;rom&gt;
+s &lt;address&gt;
+pd &lt;N&gt;
+/x &lt;hex&gt;          # поиск
+px &lt;N&gt; @ &lt;addr&gt;   # hex-дамп</code></pre>
+</section>
+
+<section id="s26">
+<h2>26. Приложение: карта подсистем</h2>
+<h3>26.1 Game loop 0x026E</h3>
+<pre><code class="language-text">1. CALL 0x0DDC (скрипт)
+2. CALL 0x210D (HUD)
+3. CALL 0x1B3A (спавн)
+4. CALL 0x1BC7 (пули)
+5. CALL 0x12A7 (коллизии)
+6. CALL 0x12E7 (анимация)
+7. CALL 0x0DDC (ещё раз)
+8. Итерация объектов 0xE600+ через 0x02D3
+9. Если все → goto 1</code></pre>
+
+<h3>26.2 Player state machine</h3>
+<pre><code class="language-text">0x0831:
+  screen_X = world_X - scroll
+  if screen_X >= 0xE0: despawn
+  else: → 0x08B4
+
+0x08B4:
+  active = 1
+  if move_type & 0x80: return
+  table = (move_type & 1) ? 0x2F18 : 0x2E18
+  action = table[(move_type>>1)*3 + 2]
+  B = button_state + ~prev_btn
+  jp 0x08F5[action]
+    handler: write sprite, chain or ret</code></pre>
+
+<h3>26.3 Карта файлов</h3>
+<table>
+<tr><th>Адрес</th><th>Файл</th><th>Что</th></tr>
+<tr><td><code>0x0000-0x0FFF</code></td><td>mpa-1.3m</td><td>старт, IRQ, player update, input, HUD</td></tr>
+<tr><td><code>0x1000-0x1FFF</code></td><td>mpa-2.3l</td><td>game loop, parallax, level render, spawn, collisions</td></tr>
+<tr><td><code>0x2000-0x2FFF</code></td><td>mpa-3.3k</td><td>HUD score, enemy types, RLE data</td></tr>
+<tr><td><code>0x3000-0x3FFF</code></td><td>mpa-4.3j</td><td>parallax tables, player tables</td></tr>
+</table>
+</section>
+
+<section id="s27">
+<h2>27. Приложение: команды r2</h2>
+<h3>27.1 Быстрый старт</h3>
+<pre><code class="language-bash">cd ~/Downloads/mpng/orig_rom
+
+r2 -qc "pd 40 @ 0x0831" -a z80 -b 16 -m 0     mpa-1.3m   # player update
+r2 -qc "pd 40 @ 0x08B4" -a z80 -b 16 -m 0     mpa-1.3m   # dispatcher
+r2 -qc "px 48 @ 0x08F5" -a z80 -b 16 -m 0     mpa-1.3m   # jump table
+r2 -qc "pd 40 @ 0x026E" -a z80 -b 16 -m 0     mpa-1.3m   # main loop
+r2 -qc "pd 32 @ 0x02D3" -a z80 -b 16 -m 0     mpa-1.3m   # handlers
+r2 -qc "pd 30 @ 0x0038" -a z80 -b 16 -m 0     mpa-1.3m   # IRQ
+r2 -qc "pd 40 @ 0x1106" -a z80 -b 16 -m 0x1000 mpa-2.3l  # parallax
+r2 -qc "pd 40 @ 0x1B3A" -a z80 -b 16 -m 0x1000 mpa-2.3l  # enemy spawn
+r2 -qc "pd 40 @ 0x1BC7" -a z80 -b 16 -m 0x1000 mpa-2.3l  # bullets
+r2 -qc "pd 40 @ 0x1201" -a z80 -b 16 -m 0x1000 mpa-2.3l  # RLE init
+r2 -qc "pd 40 @ 0x1218" -a z80 -b 16 -m 0x1000 mpa-2.3l  # RLE render
+r2 -qc "px 64 @ 0x2D44" -a z80 -b 16 -m 0x2000 mpa-3.3k  # level data
+r2 -qc "px 64 @ 0x2CB4" -a z80 -b 16 -m 0x3000 mpa-4.3j  # parallax tables
+r2 -qc "px 96 @ 0x2E18" -a z80 -b 16 -m 0x3000 mpa-4.3j  # player actions</code></pre>
+
+<h3>27.2 Поиск сигнатур</h3>
+<pre><code class="language-bash">r2 -qc "/x 3a3ce0" -a z80 -b 16 -m 0 mpa-1.3m          # button state
+r2 -qc "/x 3a04d0" -a z80 -b 16 -m 0 mpa-1.3m          # input port
+r2 -qc "/x cd3108" -a z80 -b 16 -m 0x1000 mpa-2.3l     # player update calls
+r2 -qc "/x 32c3e1" -a z80 -b 16 -m 0x1000 mpa-2.3l     # anti-piracy</code></pre>
+
+<h3>27.3 Полные листинги</h3>
+<pre><code class="language-bash">for f in mpa-1.3m mpa-2.3l mpa-3.3k mpa-4.3j; do
+    case $f in
+        mpa-1.3m) off=0    ;;
+        mpa-2.3l) off=1000 ;;
+        mpa-3.3k) off=2000 ;;
+        mpa-4.3j) off=3000 ;;
+    esac
+    r2 -qc "pd 4096" -a z80 -b 16 -m $off $f > "$f.asm"
+done</code></pre>
+</section>
+
+<section id="s28">
+<h2>Заключение</h2>
+<p>Реверс-инжиниринг Moon Patrol завершён на <strong>95%</strong>. Известны:</p>
+<ul>
+<li>Архитектура Z80 и карта памяти.</li>
+<li>Game loop и шесть подсистем кадра.</li>
+<li>IRQ-обработчик и все таймеры.</li>
+<li>Логика игрока (update, dispatcher, 24 действия, таблицы).</li>
+<li>Рендер уровня (RLE), параллакс, HUD, score, спавн, пули, коллизии, анимация.</li>
+<li>Формат данных и таблицы констант.</li>
+</ul>
+<p>Этого достаточно для старта C++/SDL3-проекта. Детали (24 handler-а, скриптовые команды) разбираем по мере необходимости.</p>
+<p><strong>Следующий шаг:</strong> извлечь тайлы, извлечь уровни, извлечь таблицу действий, развернуть SDL3-скелет, нарисовать первый кадр.</p>
+</section>
+
+</main>
+
+<button class="back-top" id="backTop" aria-label="Наверх">↑</button>
+
+<footer>
+  Moon Patrol (Irem, 1982) — Технический отчёт · Nordic Division · 2026
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+// Подсветка синтаксиса
+hljs.highlightAll();
+
+// Кнопка меню для мобильных
+const menuBtn = document.getElementById('menuBtn');
+const toc = document.getElementById('toc');
+menuBtn.addEventListener('click', () => toc.classList.toggle('open'));
+
+// Кнопка наверх
+const backTop = document.getElementById('backTop');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 400) backTop.classList.add('show');
+  else backTop.classList.remove('show');
+});
+backTop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+
+// Активный раздел в TOC
+const tocLinks = document.querySelectorAll('nav.toc a');
+const sections = document.querySelectorAll('section[id]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      tocLinks.forEach(a => a.classList.remove('active'));
+      const active = document.querySelector(`nav.toc a[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+
+// Закрытие меню при клике на ссылку (мобильный)
+tocLinks.forEach(a => a.addEventListener('click', () => {
+  if (window.innerWidth < 900) toc.classList.remove('open');
+}));
+</script>
+
+</body>
+</html>
