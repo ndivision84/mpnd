@@ -1,22 +1,42 @@
+# Build
 build/
 *.o
 *.d
 *.a
 *.dylib
 *.so
+*.app
 
+# IDE
 .vscode/
 .idea/
 *.swp
 .DS_Store
 
+# CMake
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
 
+# Assets (генерируются из ROM — НЕ коммитить)
 assets/tiles/*.png
 assets/sprites/*.png
 assets/levels/*.json
 
+# ROM (копирайт Irem — НЕ коммитить)
+orig_rom/
+w_rom/
+bootleg/
+
+# Бэкапы (локальные)
+src/main.cpp.before_*
+src/main.cpp.hud_prev
+src/main.cpp.clean_backup
+*.bak-old
+*.bak-*
+docs/report.html.bak*
+
+# Логи
 *.log
+/tmp/
