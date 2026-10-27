@@ -61,6 +61,13 @@ struct Player {
     float offset_x = 0.0f;
 };
 
+enum GameState {
+    STATE_ATTRACT   = 0,
+    STATE_PLAYING   = 1,
+    STATE_GAME_OVER = 2,
+    STATE_SCORE     = 3
+};
+
 struct AppState {
     SDL_Window*   window   = nullptr;
     SDL_Renderer* renderer = nullptr;
@@ -75,7 +82,8 @@ struct AppState {
     float         obstacle_spawn_interval = 3.0f;   // Normal; Hard=2.0f, Easy=5.0f
     static constexpr int MAX_OBSTACLES_ACTIVE = 3;   // Normal; Hard=3, Easy=7
     int           score = 0;
-    bool          game_over = false;
+    GameState     state = STATE_ATTRACT;
+    float         state_timer = 0.0f;
     bool          paused = false;
     float         enemy_spawn_timer = 0.0f;
     float         bomb_spawn_timer = 0.0f;
@@ -199,9 +207,33 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
     if (e->type == SDL_EVENT_QUIT) return SDL_APP_SUCCESS;
     if (e->type != SDL_EVENT_KEY_DOWN) return SDL_APP_CONTINUE;
 
+    // ── Space на экранах ATTRACT / GAME_OVER / SCORE ──
+    if (e->key.key == SDLK_SPACE) {
+        if (s->state == STATE_ATTRACT || s->state == STATE_GAME_OVER || s->state == STATE_SCORE) {
+            if (s->state == STATE_GAME_OVER) {
+                s->state = STATE_SCORE;
+                s->state_timer = 0.0f;
+                return SDL_APP_CONTINUE;
+            }
+            // ATTRACT или SCORE → старт игры
+            s->score = 0;
+            s->player.y = 420.0f;
+            s->player.vy = 0.0f;
+            s->player.offset_x = 0.0f;
+            s->player.on_ground = true;
+            for (int i = 0; i < 10; ++i) s->bullets[i].active = false;
+            for (int i = 0; i < 5; ++i) { s->nlos[i].active = false; s->bombas[i].active = false; }
+            for (int i = 0; i < 8; ++i) s->obstacles[i].active = false;
+            s->obstacle_spawn_timer = 0.0f;
+            s->state = STATE_PLAYING;
+            return SDL_APP_CONTINUE;
+        }
+        // PLAYING → стрельба (ниже, существующая логика)
+    }
+
     // R — restart
     if (e->key.key == SDLK_R) {
-        s->game_over = false;
+        s->state = STATE_PLAYING;
         s->score = 0;
         s->player.y = 420.0f;
         s->player.vy = 0.0f;
@@ -215,14 +247,14 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
     }
     // G — game over (отладка)
     if (e->key.key == SDLK_G) {
-        s->game_over = true;
+        s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
         return SDL_APP_CONTINUE;
     }
     if (e->key.key == SDLK_P) {
         s->paused = !s->paused;
         return SDL_APP_CONTINUE;
     }
-    if (s->game_over) return SDL_APP_CONTINUE;
+    if (s->state == STATE_GAME_OVER) return SDL_APP_CONTINUE;
     if (s->paused)   return SDL_APP_CONTINUE;
     if (e->key.key != SDLK_SPACE) return SDL_APP_CONTINUE;
 
@@ -311,9 +343,11 @@ static void draw_glyph(SDL_Renderer* r, float x, float y, int code, float scale 
         {0x7,0x4,0x7,0x5,0x7}, // G (20) - с полной серединой
         {0x5,0x5,0x5,0x5,0x2}, // V (21) - 4 верт + точка внизу
         {0x6,0x5,0x6,0x5,0x5}, // R (22) - OK
-        {0x7,0x4,0x7,0x4,0x4}, // P (23) - верх+лев+середина+лев+лев
+        {0x7,0x4,0x7,0x4,0x4}, // P (23)
+        {0x4,0x4,0x4,0x4,0x7}, // L (24)
+        {0x6,0x5,0x5,0x5,0x6}, // D (25) - верх+лев+середина+лев+лев
     };
-    if (code < 0 || code > 23) return;
+    if (code < 0 || code > 25) return;
     for (int row = 0; row < 5; ++row) {
         uint8_t bits = glyphs[code][row];
         for (int col = 0; col < 3; ++col) {
@@ -344,10 +378,24 @@ static void draw_text(SDL_Renderer* r, float x, float y, const char* s, float sc
         else if (*p == 'V') code = 21;
         else if (*p == 'R') code = 22;
         else if (*p == 'P') code = 23;
+        else if (*p == 'L') code = 24;
+        else if (*p == 'D') code = 25;
+        else if (*p == ' ') { cx += 4.0f * scale; continue; }
         else { cx += 8; continue; }
         draw_glyph(r, cx, y, code, scale);
         cx += 4.0f * scale;
     }
+}
+
+static float text_width(const char* s, float scale) {
+    int n = 0;
+    for (const char* p = s; *p; ++p) n++;
+    return n * 4.0f * scale;
+}
+
+static void draw_text_centered(SDL_Renderer* r, float y, const char* s, float scale) {
+    float x = (800.0f - text_width(s, scale)) / 2.0f;
+    draw_text(r, x, y, s, scale);
 }
 
 static void draw_hud(SDL_Renderer* r, int score, int time_left, float world_x) {
@@ -395,10 +443,10 @@ static void draw_game_over(SDL_Renderer* r) {
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
 
     SDL_SetRenderDrawColor(r, 255, 50, 50, 255);
-    draw_text(r, 328, 250, "GAME OVER", 4.0f);
+    draw_text_centered(r, 250, "GAME OVER", 4.0f);
 
     SDL_SetRenderDrawColor(r, 200, 200, 200, 255);
-    draw_text(r, 344, 340, "PRESS R", 4.0f);
+    draw_text_centered(r, 340, "PRESS R", 4.0f);
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
@@ -447,7 +495,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     }
 
     // ── Спавн препятствий (каждые obstacle_spawn_interval сек) ──
-    if (!s->game_over && !s->paused) {
+    if (!(s->state == STATE_GAME_OVER) && !s->paused) {
         s->obstacle_spawn_timer += dt;
         if (s->obstacle_spawn_timer >= s->obstacle_spawn_interval) {
             s->obstacle_spawn_timer = 0.0f;
@@ -478,7 +526,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     }
 
     // ── Спавн тарелок (макс 2) ──
-    if (!s->game_over) {
+    if (s->state == STATE_PLAYING) {
         s->enemy_spawn_timer += dt;
         if (s->enemy_spawn_timer > 2.5f) {
             s->enemy_spawn_timer = 0.0f;
@@ -528,7 +576,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         float sx = s->obstacles[i].world_x - s->world_x;
         if (sx < -100) { s->obstacles[i].active = false; continue; }
 
-        if (!s->game_over) {
+        if (s->state == STATE_PLAYING) {
             float px = s->player.screen_x + s->player.offset_x;
             float left  = sx;
             float right = sx + s->obstacles[i].width;
@@ -536,13 +584,13 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
             if (h_overlap) {
                 if (s->obstacles[i].type == 0 && s->player.on_ground) {
-                    s->game_over = true;
+                    s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
                     SDL_Log("Fell into PIT!");
                 } else if (s->obstacles[i].type == 1 && s->player.y > 380.0f) {
-                    s->game_over = true;
+                    s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
                     SDL_Log("Hit ROCK!");
                 } else if (s->obstacles[i].type == 2 && s->player.on_ground) {
-                    s->game_over = true;
+                    s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
                     SDL_Log("Fell into CRATER!");
                 }
             }
@@ -632,27 +680,86 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         }
     }
     // ── Коллизии: враги/бомбы × луноход → game over ──
-    if (!s->game_over) {
+    if (s->state == STATE_PLAYING) {
         float px = s->player.screen_x + s->player.offset_x;
         float py = s->player.y;
         for (int e = 0; e < 5; ++e) {
             if (s->nlos[e].active &&
                 fabs(px - s->nlos[e].x) < 32 &&
                 fabs(py - s->nlos[e].y) < 32) {
-                s->game_over = true;
+                s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
             }
         }
         for (int bo = 0; bo < 5; ++bo) {
             if (s->bombas[bo].active &&
                 fabs(px - s->bombas[bo].x) < 28 &&
                 fabs(py - s->bombas[bo].y) < 32) {
-                s->game_over = true;
+                s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
             }
         }
     }
 
     SDL_SetRenderDrawColor(s->renderer, 0, 0, 0, 255);
     SDL_RenderClear(s->renderer);
+
+    // ── Переход GAME_OVER → SCORE по таймеру (3 сек) ──
+    if (s->state == STATE_GAME_OVER) {
+        s->state_timer += dt;
+        if (s->state_timer >= 3.0f) {
+            s->state = STATE_SCORE;
+            s->state_timer = 0.0f;
+        }
+    }
+
+    // ── Экраны ATTRACT / GAME_OVER / SCORE ──
+    if (s->state != STATE_PLAYING) {
+        // Звёзды
+        {
+            constexpr float STAR_PARALLAX = 0.05f;
+            float star_scroll = std::fmod(s->world_x * STAR_PARALLAX, 800.0f);
+            for (int i = 0; i < 120; ++i) {
+                float sx = s->stars[i].x - star_scroll;
+                if (sx < 0) sx += 800.0f;
+                SDL_SetRenderDrawColor(s->renderer,
+                                       s->stars[i].brightness,
+                                       s->stars[i].brightness,
+                                       s->stars[i].brightness,
+                                       255);
+                SDL_FRect r = { sx, s->stars[i].y, 2, 2 };
+                SDL_RenderFillRect(s->renderer, &r);
+            }
+        }
+
+        if (s->state == STATE_ATTRACT) {
+            SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 255);
+            draw_text_centered(s->renderer, 220, "MOON PATROL ND", 8.0f);
+            SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 180);
+            draw_text_centered(s->renderer, 420, "PRESS SPACE", 3.0f);
+        } else if (s->state == STATE_GAME_OVER) {
+            SDL_SetRenderDrawColor(s->renderer, 0xff, 0x30, 0x30, 255);
+            draw_text_centered(s->renderer, 260, "GAME OVER", 7.0f);
+            SDL_SetRenderDrawColor(s->renderer, 0xff, 0xff, 0xff, 180);
+            draw_text_centered(s->renderer, 420, "PRESS SPACE", 3.0f);
+        } else if (s->state == STATE_SCORE) {
+            SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 255);
+            draw_text_centered(s->renderer, 160, "SCORE", 5.0f);
+
+            char score_buf[8];
+            int sc = s->score > 99999 ? 99999 : s->score;
+            for (int i = 0; i < 5; ++i) {
+                score_buf[4 - i] = '0' + ((sc / (int)std::pow(10, i)) % 10);
+            }
+            score_buf[5] = 0;
+            SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 255);
+            draw_text_centered(s->renderer, 300, score_buf, 10.0f);
+
+            SDL_SetRenderDrawColor(s->renderer, 0xff, 0xff, 0xff, 180);
+            draw_text_centered(s->renderer, 500, "PRESS SPACE", 3.0f);
+        }
+
+        SDL_RenderPresent(s->renderer);
+        return SDL_APP_CONTINUE;
+    }
 
     const float SCALE = 3.0f;
     const float lane_h = 64.0f * SCALE;
@@ -826,10 +933,10 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     // ── Счёт ──
     draw_score(s->renderer, s->score);
     // ── GAME OVER ──
-    if (s->game_over) {
-        draw_game_over(s->renderer);
+    if (s->state == STATE_GAME_OVER) {
+        // GAME OVER рендер вынесен выше
     }
-    if (s->paused && !s->game_over) {
+    if (s->paused && !(s->state == STATE_GAME_OVER)) {
         SDL_SetRenderDrawBlendMode(s->renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(s->renderer, 0, 0, 0, 150);
         SDL_FRect pbg = { 0, 0, 800, 600 };
