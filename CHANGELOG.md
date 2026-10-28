@@ -49,3 +49,30 @@
 - HUD (TIME, CAUTION) — отключён.
 - Жизни — бесконечные (для отладки).
 - Уровни сложности — константа в коде, без переключателя.
+
+## [20261027b] — 2026-10-27 (вторая итерация)
+
+### Добавлено
+
+- `enum GameState`: ATTRACT / PLAYING / GAME_OVER / SCORE.
+- Экран **ATTRACT**: «MOON PATROL ND» зелёным (scale 8) + звёзды + «PRESS SPACE».
+- Экран **GAME_OVER**: «GAME OVER» красным (scale 7) + звёзды + «PRESS SPACE».
+- Экран **SCORE**: «SCORE» + счёт крупным (scale 10) + «PRESS SPACE».
+- Автоматический переход GAME_OVER → SCORE через 3 секунды (или по Space).
+- Глифы **L (24)**, **D (25)** для «MOON PATROL ND».
+- `draw_text_centered` + `text_width` — центрирование надписей по горизонтали.
+- Обработка пробела в `draw_text`: `4*scale` (правильное центрирование).
+
+### Изменено
+
+- **Space работает по state**:
+  - ATTRACT → старт игры,
+  - PLAYING → стрельба (пара пуль),
+  - GAME_OVER → переход в SCORE,
+  - SCORE → новая игра (reset счёта и всех объектов).
+- Старый флаг `game_over` заменён на `enum GameState state`.
+
+### Патчи
+
+- `tools/patches/patch_19_ui_states.py`
+- `tools/patches/patch_20_center_text.py`
