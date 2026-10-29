@@ -7,6 +7,7 @@
 #include <cmath>
 #include <random>
 #include <chrono>
+#include <cstdio>
 
 struct Layer {
     SDL_Texture* tex = nullptr;
@@ -52,6 +53,29 @@ struct Star {
     float parallax = 0.15f;   // 0.06 slow / 0.15 normal / 0.30 fast
 };
 
+
+// ─────────────────────────────────────────────────────────────
+// Zones helpers
+// ─────────────────────────────────────────────────────────────
+static char zone_letter(int idx) {
+    if (idx < 0)  idx = 0;
+    if (idx > 25) idx = 25;
+    return (char)('A' + idx);
+}
+
+// Groups: A(0) | B-E(1-4) | F-I(5-8) | J-M(9-12) | N-Q(13-16) | R-U(17-20) | V-Y(21-24) | Z(25)
+static int zone_group_first(int idx) {
+    if (idx <= 0)  return 0;
+    if (idx >= 25) return 25;
+    return ((idx - 1) / 4) * 4 + 1;
+}
+
+static int zone_group_num(int idx) {
+    if (idx <= 0)  return 1;
+    if (idx >= 25) return 8;
+    return ((idx - 1) / 4) + 2;
+}
+
 struct Player {
     float y = 520.0f;
     float vy = 0.0f;
@@ -86,7 +110,15 @@ struct AppState {
     int           score = 0;
     GameState     state = STATE_ATTRACT;
     float         state_timer = 0.0f;
-    float         play_time   = 0.0f;   // секунды в PLAYING (для TIME)
+
+    // ── Zones system (A..Z, 8 groups) ──
+    static constexpr int   ZONES_TOTAL   = 26;      // A..Z
+    static constexpr float ZONE_DISTANCE = 2000.0f; // px per zone
+    static constexpr int   LIVES_START   = 3;
+    int   zone_index      = 0;              // 0=A, 25=Z
+    int   checkpoint_zone = 0;              // first letter of current group
+    float zone_time       = 0.0f;           // seconds in current zone
+    int   lives           = LIVES_START;
     bool          paused = false;
     float         enemy_spawn_timer = 0.0f;
     float         bomb_spawn_timer = 0.0f;
@@ -244,7 +276,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
             s->enemy_spawn_timer    = 0.0f;
             s->bomb_spawn_timer     = 0.0f;
             s->world_x              = 0.0f;   // ROM: scroll=0 на init уровня
-            s->play_time = 0.0f;
+            s->zone_index      = 0;
+            s->checkpoint_zone = 0;
+            s->zone_time       = 0.0f;
+            s->lives           = AppState::LIVES_START;
             s->state = STATE_PLAYING;
             SDL_Log("START: %s (immediate)", nm[start_diff]);
         }
@@ -277,7 +312,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
             s->enemy_spawn_timer    = 0.0f;
             s->bomb_spawn_timer     = 0.0f;
             s->world_x              = 0.0f;   // ROM: scroll=0 на init уровня
-            s->play_time = 0.0f;
+            s->zone_index      = 0;
+            s->checkpoint_zone = 0;
+            s->zone_time       = 0.0f;
+            s->lives           = AppState::LIVES_START;
             s->state = STATE_PLAYING;
             return SDL_APP_CONTINUE;
         }
@@ -288,7 +326,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
     if (e->key.key == SDLK_R) {
         s->state = STATE_PLAYING;
         s->score = 0;
-        s->play_time = 0.0f;
+        s->zone_index      = 0;
+        s->checkpoint_zone = 0;
+        s->zone_time       = 0.0f;
+        s->lives           = AppState::LIVES_START;
         s->player.y = 520.0f;
         s->player.vy = 0.0f;
         s->player.offset_x = 0.0f;
@@ -414,8 +455,21 @@ static void draw_glyph(SDL_Renderer* r, float x, float y, int code, float scale 
         {0x11, 0x11, 0x11, 0x0A, 0x04, 0x04, 0x04},  // Y
         {0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F},  // Z (35)
         {0x00, 0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0x00},  // : (36)
+        {0x0E, 0x11, 0x01, 0x06, 0x01, 0x11, 0x0E},  // З (37)
+        {0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E},  // О (38)
+        {0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11},  // Н (39)
+        {0x0E, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11},  // А (40)
+        {0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E},  // В (41)
+        {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},  // Р (42)
+        {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F},  // Е (43)
+        {0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11},  // М (44)
+        {0x0F, 0x11, 0x11, 0x0F, 0x05, 0x09, 0x11},  // Я (45)
+        {0x11, 0x11, 0x11, 0x0F, 0x01, 0x01, 0x01},  // Ч (46)
+        {0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11},  // К (47)
+        {0x11, 0x11, 0x13, 0x15, 0x19, 0x11, 0x11},  // И (48)
+        {0x15, 0x15, 0x15, 0x1F, 0x15, 0x15, 0x15},  // Ж (49)
     };
-    if (code < 0 || code > 36) return;
+    if (code < 0 || code > 49) return;
     for (int row = 0; row < 7; ++row) {
         uint8_t bits = glyphs[code][row];
         for (int col = 0; col < 5; ++col) {
@@ -429,21 +483,46 @@ static void draw_glyph(SDL_Renderer* r, float x, float y, int code, float scale 
 
 static void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale = 4.0f) {
     float cx = x;
-    for (const char* p = s; *p; ++p) {
-        int code;
-        if (*p >= '0' && *p <= '9') code = *p - '0';
-        else if (*p >= 'A' && *p <= 'Z') code = 10 + (*p - 'A');
-        else if (*p == ':') code = 36;
-        else if (*p == ' ') { cx += 6.0f * scale; continue; }
-        else { cx += 8; continue; }
-        draw_glyph(r, cx, y, code, scale);
+    for (const char* p = s; *p; ) {
+        unsigned char b0 = (unsigned char)*p;
+        int code = -1;
+        if (b0 >= 0x80) {
+            if (b0 == 0xD0 && *(p+1)) {
+                unsigned char b1 = (unsigned char)*(p+1);
+                switch (b1) {
+                    case 0x97: code = 37; break; // З
+                    case 0x9E: code = 38; break; // О
+                    case 0x9D: code = 39; break; // Н
+                    case 0x90: code = 40; break; // А
+                    case 0x92: code = 41; break; // В
+                    case 0xA0: code = 42; break; // Р
+                    case 0x95: code = 43; break; // Е
+                    case 0x9C: code = 44; break; // М
+                    case 0xAF: code = 45; break; // Я
+                    case 0xA7: code = 46; break; // Ч
+                    case 0x9A: code = 47; break; // К
+                    case 0x98: code = 48; break; // И
+                    case 0x96: code = 49; break; // Ж
+                }
+                p += 2;
+            } else { p += 1; continue; }
+        } else if (b0 >= '0' && b0 <= '9') { code = b0 - '0'; p++; }
+        else if (b0 >= 'A' && b0 <= 'Z') { code = 10 + (b0 - 'A'); p++; }
+        else if (b0 == ':') { code = 36; p++; }
+        else if (b0 == ' ') { cx += 6.0f * scale; p++; continue; }
+        else { cx += 8; p++; continue; }
+        if (code >= 0) draw_glyph(r, cx, y, code, scale);
         cx += 6.0f * scale;
     }
 }
 
 static float text_width(const char* s, float scale) {
     int n = 0;
-    for (const char* p = s; *p; ++p) n++;
+    for (const char* p = s; *p; ) {
+        unsigned char b0 = (unsigned char)*p;
+        p += (b0 >= 0x80) ? 2 : 1;
+        n++;
+    }
     return n * 6.0f * scale;
 }
 
@@ -470,40 +549,41 @@ static void draw_stars(SDL_Renderer* r, const Star* stars, int count, float worl
     }
 }
 
-static void draw_hud(SDL_Renderer* r, int score, int time_left, float world_x, int difficulty) {
-    (void)world_x;
+static void draw_hud(SDL_Renderer* r, int score, int zone_index, float zone_time, int lives, int difficulty) {
     SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
 
-    constexpr float HUD_SCALE = 3.0f;
+    constexpr float HUD_SCALE = 2.8f;
     constexpr float HUD_Y     = 20.0f;
+    constexpr float MARGIN    = 20.0f;
 
-    // TIME: XX — слева
-    char tbuf[9];
-    tbuf[0]='T'; tbuf[1]='I'; tbuf[2]='M'; tbuf[3]='E';
-    tbuf[4]=':'; tbuf[5]=' ';
-    tbuf[6]='0' + (time_left / 10) % 10;
-    tbuf[7]='0' + time_left % 10;
-    tbuf[8]=0;
-    draw_text(r, 20.0f, HUD_Y, tbuf, HUD_SCALE);
+    int sec = (int)zone_time;  if (sec < 0) sec = 0;  if (sec > 99)    sec = 99;
+    int sc  = score;           if (sc  < 0) sc  = 0;  if (sc  > 99999) sc  = 99999;
+    int lv  = lives;           if (lv  < 0) lv  = 0;  if (lv  > 9)     lv  = 9;
+    const char* mode = (difficulty == 0) ? "EASY" :
+                       (difficulty == 2) ? "HARD" : "NORMAL";
 
-    // Счёт — 5 цифр по центру
-    char sbuf[8];
+    char X_zone[32], X_time[32], X_score[32], X_lives[32], X_difficulty[32];
+    snprintf(X_zone,       sizeof(X_zone),       "ЗОНА:%c",    zone_letter(zone_index));
+    snprintf(X_time,       sizeof(X_time),       "ВРЕМЯ:%02d", sec);
+    snprintf(X_score,      sizeof(X_score),      "ОЧКИ:%05d",  sc);
+    snprintf(X_lives,      sizeof(X_lives),      "ЖИЗНИ:%d",   lv);
+    snprintf(X_difficulty, sizeof(X_difficulty), "РЕЖИМ:%s",   mode);
+
+    const char* parts[5] = { X_zone, X_time, X_score, X_lives, X_difficulty };
+    float widths[5];
+    float total = 0.0f;
     for (int i = 0; i < 5; ++i) {
-        sbuf[4 - i] = '0' + ((score / (int)pow(10, i)) % 10);
+        widths[i] = text_width(parts[i], HUD_SCALE);
+        total += widths[i];
     }
-    sbuf[5] = 0;
-    {
-        const float sw = 5 * 6.0f * HUD_SCALE;
-        draw_text(r, (800.0f - sw) / 2.0f, HUD_Y, sbuf, HUD_SCALE);
-    }
+    float gap = (800.0f - total - 2.0f * MARGIN) / 4.0f;
+    if (gap < 4.0f) gap = 4.0f;
 
-    // MODE: <name> — справа (вместо CAUTION/DIFF)
-    const char* mode_str = (difficulty == 0) ? "MODE: EASY" :
-                           (difficulty == 2) ? "MODE: HARD" : "MODE: NORMAL";
-    int nlen = 0;
-    while (mode_str[nlen]) nlen++;
-    const float cw = nlen * 6.0f * HUD_SCALE;
-    draw_text(r, 800.0f - cw - 20.0f, HUD_Y, mode_str, HUD_SCALE);
+    float x = MARGIN;
+    for (int i = 0; i < 5; ++i) {
+        draw_text(r, x, HUD_Y, parts[i], HUD_SCALE);
+        x += widths[i] + gap;
+    }
 }
 
 #if 0
@@ -534,6 +614,34 @@ static void draw_game_over(SDL_Renderer* r) {
 
 #endif
 
+static void player_died(AppState* s, const char* reason) {
+    SDL_Log("DEATH: %s (zone %c, lives: %d)",
+            reason, zone_letter(s->zone_index), s->lives);
+    s->lives--;
+    if (s->lives <= 0) {
+        s->state = STATE_GAME_OVER;
+        s->state_timer = 0.0f;
+        SDL_Log("GAME OVER (out of lives)");
+        return;
+    }
+    // Respawn at checkpoint
+    s->zone_index    = s->checkpoint_zone;
+    s->zone_time     = 0.0f;
+    s->world_x       = s->checkpoint_zone * AppState::ZONE_DISTANCE + 50.0f;
+    s->player.y      = 520.0f;
+    s->player.vy     = 0.0f;
+    s->player.offset_x = 0.0f;
+    s->player.on_ground = true;
+    for (int i = 0; i < 10; ++i) s->bullets[i].active = false;
+    for (int i = 0; i < 5; ++i) { s->nlos[i].active = false; s->bombas[i].active = false; }
+    for (int i = 0; i < 8; ++i) s->obstacles[i].active = false;
+    s->obstacle_spawn_timer = 0.0f;
+    s->enemy_spawn_timer    = 0.0f;
+    s->bomb_spawn_timer     = 0.0f;
+    SDL_Log("RESPAWN: zone %c (group %d), lives: %d",
+            zone_letter(s->zone_index), zone_group_num(s->zone_index), s->lives);
+}
+
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* s = static_cast<AppState*>(appstate);
     static Uint64 last_tick = 0;
@@ -545,14 +653,26 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     if (dt < 0.001f) dt = 0.001f; // защита от div-by-zero
     if (s->paused)   dt = 0.0f;
 
-    s->play_time += dt;
     s->world_x += s->auto_speed * dt;
 
-    // ★ Проверка окончания времени — ДО рендера (без кадра «TIME:00»)
-    if (s->state == STATE_PLAYING && s->play_time >= 60.0f) {
-        SDL_Log("TIME UP! play_time=%.1f -> GAME_OVER", s->play_time);
-        s->state = STATE_GAME_OVER;
-        s->state_timer = 0.0f;
+    // ── Zone progression (только в PLAYING) ──
+    if (s->state == STATE_PLAYING) {
+        s->zone_time += dt;
+        int new_zone = (int)(s->world_x / AppState::ZONE_DISTANCE);
+        if (new_zone > AppState::ZONES_TOTAL - 1) new_zone = AppState::ZONES_TOTAL - 1;
+        if (new_zone > s->zone_index) {
+            int old_group = zone_group_num(s->zone_index);
+            s->zone_index = new_zone;
+            s->zone_time  = 0.0f;
+            int new_group = zone_group_num(new_zone);
+            if (new_group != old_group) {
+                s->checkpoint_zone = zone_group_first(new_zone);
+                SDL_Log("CHECKPOINT: zone %c (group %d)",
+                        zone_letter(s->checkpoint_zone), new_group);
+            }
+            SDL_Log("ZONE: %c (group %d)",
+                    zone_letter(new_zone), new_group);
+        }
     }
 
     const bool* keys = SDL_GetKeyboardState(nullptr);
@@ -677,14 +797,11 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
             if (h_overlap) {
                 if (s->obstacles[i].type == 0 && s->player.on_ground) {
-                    s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
-                    SDL_Log("Fell into PIT!");
+                    player_died(s, "PIT");
                 } else if (s->obstacles[i].type == 1 && s->player.y > 480.0f) {
-                    s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
-                    SDL_Log("Hit ROCK!");
+                    player_died(s, "ROCK");
                 } else if (s->obstacles[i].type == 2 && s->player.on_ground) {
-                    s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
-                    SDL_Log("Fell into CRATER!");
+                    player_died(s, "CRATER");
                 }
             }
         }
@@ -780,14 +897,14 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
             if (s->nlos[e].active &&
                 fabs(px - s->nlos[e].x) < 32 &&
                 fabs(py - s->nlos[e].y) < 32) {
-                s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
+                player_died(s, "NLO");
             }
         }
         for (int bo = 0; bo < 5; ++bo) {
             if (s->bombas[bo].active &&
                 fabs(px - s->bombas[bo].x) < 28 &&
                 fabs(py - s->bombas[bo].y) < 32) {
-                s->state = STATE_GAME_OVER; s->state_timer = 0.0f;
+                player_died(s, "BOMB");
             }
         }
     }
@@ -842,7 +959,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
             draw_text_centered(s->renderer, 420, "PRESS SPACE", 3.0f);
         } else if (s->state == STATE_SCORE) {
             SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 255);
-            draw_text_centered(s->renderer, 160, "SCORE", 5.0f);
+            draw_text_centered(s->renderer, 140, "SCORE", 5.0f);
 
             char score_buf[8];
             int sc = s->score > 99999 ? 99999 : s->score;
@@ -851,7 +968,19 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
             }
             score_buf[5] = 0;
             SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 255);
-            draw_text_centered(s->renderer, 300, score_buf, 10.0f);
+            draw_text_centered(s->renderer, 260, score_buf, 10.0f);
+
+            // REACHED: X
+            {
+                char rbuf[16];
+                const char* prefix = "REACHED: ";
+                int ri = 0;
+                for (const char* q = prefix; *q; ++q) rbuf[ri++] = *q;
+                rbuf[ri++] = zone_letter(s->zone_index);
+                rbuf[ri] = 0;
+                SDL_SetRenderDrawColor(s->renderer, 0xff, 0xff, 0xff, 220);
+                draw_text_centered(s->renderer, 420, rbuf, 3.0f);
+            }
 
             SDL_SetRenderDrawColor(s->renderer, 0xff, 0xff, 0xff, 180);
             draw_text_centered(s->renderer, 500, "PRESS SPACE", 3.0f);
@@ -955,10 +1084,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     }
 
     // HUD поверх
-    // int score = (int)(s->world_x * 10);   // не используется
-    int time_left = 60 - (int)s->play_time;
-    if (time_left < 0) time_left = 0;
-    draw_hud(s->renderer, s->score, time_left, s->world_x, s->difficulty);
+    draw_hud(s->renderer, s->score, s->zone_index, s->zone_time,
+             s->lives, s->difficulty);
 
     // ── Отрисовка тарелок (56×36, белый + чёрная обводка) ──
     for (int e = 0; e < 5; ++e) {
