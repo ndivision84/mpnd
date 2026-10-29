@@ -49,6 +49,7 @@ struct Star {
     float x = 0.0f;
     float y = 0.0f;
     uint8_t brightness = 200;
+    float parallax = 0.15f;   // 0.06 slow / 0.15 normal / 0.30 fast
 };
 
 struct Player {
@@ -182,14 +183,21 @@ SDL_AppResult SDL_AppInit(void** appstate, int, char**) {
     // ── Инициализация звёзд ──
     {
         std::uniform_real_distribution<float> star_x(0.0f, 800.0f);
-        std::uniform_real_distribution<float> star_y(0.0f, 300.0f);
+        std::uniform_real_distribution<float> star_y(0.0f, 600.0f);
         std::uniform_int_distribution<int>   star_b(120, 255);
+        std::uniform_int_distribution<int>   star_layer(0, 2);
+        static const float STAR_SPEEDS[3] = { 0.06f, 0.15f, 0.30f };  // slow / normal / fast
+        int layer_count[3] = { 0, 0, 0 };
         for (int i = 0; i < 120; ++i) {
             s->stars[i].x = star_x(rng);
             s->stars[i].y = star_y(rng);
             s->stars[i].brightness = (uint8_t)star_b(rng);
+            int l = star_layer(rng);
+            s->stars[i].parallax = STAR_SPEEDS[l];
+            layer_count[l]++;
         }
-        SDL_Log("Stars initialized: 120");
+        SDL_Log("Stars initialized: 120 (slow=%d, normal=%d, fast=%d)",
+                layer_count[0], layer_count[1], layer_count[2]);
     }
 
     SDL_Log("Palette #%d:", palette_idx);
@@ -233,6 +241,8 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
             for (int i = 0; i < 5; ++i) { s->nlos[i].active = false; s->bombas[i].active = false; }
             for (int i = 0; i < 8; ++i) s->obstacles[i].active = false;
             s->obstacle_spawn_timer = 0.0f;
+            s->enemy_spawn_timer    = 0.0f;
+            s->bomb_spawn_timer     = 0.0f;
             s->play_time = 0.0f;
             s->state = STATE_PLAYING;
             SDL_Log("START: %s (immediate)", nm[start_diff]);
@@ -263,6 +273,8 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
             for (int i = 0; i < 5; ++i) { s->nlos[i].active = false; s->bombas[i].active = false; }
             for (int i = 0; i < 8; ++i) s->obstacles[i].active = false;
             s->obstacle_spawn_timer = 0.0f;
+            s->enemy_spawn_timer    = 0.0f;
+            s->bomb_spawn_timer     = 0.0f;
             s->play_time = 0.0f;
             s->state = STATE_PLAYING;
             return SDL_APP_CONTINUE;
@@ -283,6 +295,8 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
         for (int i = 0; i < 5; ++i) { s->nlos[i].active = false; s->bombas[i].active = false; }
         for (int i = 0; i < 8; ++i) s->obstacles[i].active = false;
         s->obstacle_spawn_timer = 0.0f;
+        s->enemy_spawn_timer    = 0.0f;
+        s->bomb_spawn_timer     = 0.0f;
         return SDL_APP_CONTINUE;
     }
     // G — game over (отладка)
@@ -435,6 +449,24 @@ static void draw_text_centered(SDL_Renderer* r, float y, const char* s, float sc
     draw_text(r, x, y, s, scale);
 }
 
+// ─────────────────────────────────────────────────────────────
+// Отрисовка звёзд с 3 слоями параллакса (per-star скорость)
+// ─────────────────────────────────────────────────────────────
+static void draw_stars(SDL_Renderer* r, const Star* stars, int count, float world_x) {
+    for (int i = 0; i < count; ++i) {
+        float scroll = std::fmod(world_x * stars[i].parallax, 800.0f);
+        float sx = stars[i].x - scroll;
+        if (sx < 0) sx += 800.0f;
+        SDL_SetRenderDrawColor(r,
+                               stars[i].brightness,
+                               stars[i].brightness,
+                               stars[i].brightness,
+                               255);
+        SDL_FRect rect = { sx, stars[i].y, 2, 2 };
+        SDL_RenderFillRect(r, &rect);
+    }
+}
+
 static void draw_hud(SDL_Renderer* r, int score, int time_left, float world_x, int difficulty) {
     (void)world_x;
     SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
@@ -471,6 +503,7 @@ static void draw_hud(SDL_Renderer* r, int score, int time_left, float world_x, i
     draw_text(r, 800.0f - cw - 20.0f, HUD_Y, mode_str, HUD_SCALE);
 }
 
+#if 0
 static void draw_score(SDL_Renderer* r, int score) {
     SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
     char buf[6];
@@ -496,6 +529,8 @@ static void draw_game_over(SDL_Renderer* r) {
     draw_text_centered(r, 340, "PRESS R", 4.0f);
 }
 
+#endif
+
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* s = static_cast<AppState*>(appstate);
     static Uint64 last_tick = 0;
@@ -509,6 +544,13 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     s->play_time += dt;
     s->world_x += s->auto_speed * dt;
+
+    // ★ Проверка окончания времени — ДО рендера (без кадра «TIME:00»)
+    if (s->state == STATE_PLAYING && s->play_time >= 60.0f) {
+        SDL_Log("TIME UP! play_time=%.1f -> GAME_OVER", s->play_time);
+        s->state = STATE_GAME_OVER;
+        s->state_timer = 0.0f;
+    }
 
     const bool* keys = SDL_GetKeyboardState(nullptr);
     if (keys[SDL_SCANCODE_LEFT])  s->player.offset_x -= 200.0f * dt;
@@ -761,22 +803,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     // ── Экраны ATTRACT / GAME_OVER / SCORE ──
     if (s->state != STATE_PLAYING) {
-        // Звёзды
-        {
-            constexpr float STAR_PARALLAX = 0.05f;
-            float star_scroll = std::fmod(s->world_x * STAR_PARALLAX, 800.0f);
-            for (int i = 0; i < 120; ++i) {
-                float sx = s->stars[i].x - star_scroll;
-                if (sx < 0) sx += 800.0f;
-                SDL_SetRenderDrawColor(s->renderer,
-                                       s->stars[i].brightness,
-                                       s->stars[i].brightness,
-                                       s->stars[i].brightness,
-                                       255);
-                SDL_FRect r = { sx, s->stars[i].y, 2, 2 };
-                SDL_RenderFillRect(s->renderer, &r);
-            }
-        }
+        // Звёзды (3 слоя параллакса)
+        draw_stars(s->renderer, s->stars, 120, s->world_x);
 
         if (s->state == STATE_ATTRACT) {
             SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 255);
@@ -834,22 +862,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     const float lane_h = 64.0f * SCALE;
     const float lane_y = 328.0f;
 
-    // ── Отрисовка звёзд (параллакс 0.05) ──
-    {
-        constexpr float STAR_PARALLAX = 0.05f;
-        float star_scroll = fmod(s->world_x * STAR_PARALLAX, 800.0f);
-        for (int i = 0; i < 120; ++i) {
-            float sx = s->stars[i].x - star_scroll;
-            if (sx < 0) sx += 800.0f;
-            SDL_SetRenderDrawColor(s->renderer,
-                                   s->stars[i].brightness,
-                                   s->stars[i].brightness,
-                                   s->stars[i].brightness,
-                                   255);
-            SDL_FRect r = { sx, s->stars[i].y, 2, 2 };
-            SDL_RenderFillRect(s->renderer, &r);
-        }
-    }
+    // ── Отрисовка звёзд (3 слоя параллакса) ──
+    draw_stars(s->renderer, s->stars, 120, s->world_x);
 
     for (int i = 0; i < 3; ++i) {
         if (!s->layers[i].tex) continue;
@@ -873,33 +887,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     SDL_FRect ground_line = { 0, lane_y + lane_h, 800, 2 };
     SDL_RenderFillRect(s->renderer, &ground_line);
 
-    draw_buggy(s->renderer,
-               s->player.screen_x + s->player.offset_x,
-               s->player.y - 8);
-
-    // Пули — жёлтые
-    SDL_SetRenderDrawColor(s->renderer, 0xFF, 0xFF, 0x00, 255);
-    for (int i = 0; i < 10; ++i) {
-        if (s->bullets[i].active) {
-            float w = (i < 5) ? 8.0f : 3.0f;
-            float h = (i < 5) ? 3.0f : 8.0f;
-            SDL_FRect b = { s->bullets[i].x, s->bullets[i].y, w, h };
-            SDL_RenderFillRect(s->renderer, &b);
-        }
-    }
-
-    // HUD поверх
-    int score = (int)(s->world_x * 10);
-    int time_left = 60 - (int)s->play_time;
-    if (time_left < 0) time_left = 0;
-    if (time_left == 0) {
-        SDL_Log("TIME UP! play_time=%.1f -> GAME_OVER", s->play_time);
-        s->state = STATE_GAME_OVER;
-        s->state_timer = 0.0f;
-    }
-    draw_hud(s->renderer, s->score, time_left, s->world_x, s->difficulty);
-
-    // ── Отрисовка препятствий (выровнено по колёсам: gy=460) ──
+    // ── Отрисовка препятствий ДО лунохода (луноход поверх) ──
     const float gy = 520.0f;  // = player.y
     for (int i = 0; i < 8; ++i) {
         if (!s->obstacles[i].active) continue;
@@ -947,6 +935,27 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
             }
         }
     }
+
+    draw_buggy(s->renderer,
+               s->player.screen_x + s->player.offset_x,
+               s->player.y - 8);
+
+    // Пули — жёлтые
+    SDL_SetRenderDrawColor(s->renderer, 0xFF, 0xFF, 0x00, 255);
+    for (int i = 0; i < 10; ++i) {
+        if (s->bullets[i].active) {
+            float w = (i < 5) ? 8.0f : 3.0f;
+            float h = (i < 5) ? 3.0f : 8.0f;
+            SDL_FRect b = { s->bullets[i].x, s->bullets[i].y, w, h };
+            SDL_RenderFillRect(s->renderer, &b);
+        }
+    }
+
+    // HUD поверх
+    // int score = (int)(s->world_x * 10);   // не используется
+    int time_left = 60 - (int)s->play_time;
+    if (time_left < 0) time_left = 0;
+    draw_hud(s->renderer, s->score, time_left, s->world_x, s->difficulty);
 
     // ── Отрисовка тарелок (56×36, белый + чёрная обводка) ──
     for (int e = 0; e < 5; ++e) {
