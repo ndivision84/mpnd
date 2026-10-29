@@ -243,6 +243,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
             s->obstacle_spawn_timer = 0.0f;
             s->enemy_spawn_timer    = 0.0f;
             s->bomb_spawn_timer     = 0.0f;
+            s->world_x              = 0.0f;   // ROM: scroll=0 на init уровня
             s->play_time = 0.0f;
             s->state = STATE_PLAYING;
             SDL_Log("START: %s (immediate)", nm[start_diff]);
@@ -275,6 +276,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
             s->obstacle_spawn_timer = 0.0f;
             s->enemy_spawn_timer    = 0.0f;
             s->bomb_spawn_timer     = 0.0f;
+            s->world_x              = 0.0f;   // ROM: scroll=0 на init уровня
             s->play_time = 0.0f;
             s->state = STATE_PLAYING;
             return SDL_APP_CONTINUE;
@@ -297,6 +299,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
         s->obstacle_spawn_timer = 0.0f;
         s->enemy_spawn_timer    = 0.0f;
         s->bomb_spawn_timer     = 0.0f;
+        s->world_x              = 0.0f;   // ROM: scroll=0 на init уровня
         return SDL_APP_CONTINUE;
     }
     // G — game over (отладка)
@@ -640,7 +643,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         // ── Спавн бомб (макс 3) ──
         s->bomb_spawn_timer += dt;
         if (s->bomb_spawn_timer > 3.0f) {
-            s->bomb_spawn_timer = 0.0f;
+            s->bomb_spawn_timer     = 0.0f;
             int cnt = 0;
             for (int i = 0; i < 5; ++i) if (s->bombas[i].active) cnt++;
             if (cnt < AppState::MAX_BOMBAS) {
