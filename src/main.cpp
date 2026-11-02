@@ -8,125 +8,11 @@
 #include <random>
 #include <chrono>
 #include <cstdio>
+#include "app.h"
 
-struct Layer {
-    SDL_Texture* tex = nullptr;
-    int w = 0, h = 0;
-    float parallax = 1.0f;
-    SDL_Color tint = {255, 255, 255, 255};
-};
+// (structs вынесены в app.h)
 
-struct Bullet {
-    float x = 0.0f;
-    float y = 0.0f;
-    float dx = 0.0f;
-    float dy = 0.0f;
-    float life = 0.0f;
-    bool active = false;
-};
-
-struct NLO {
-    float x = 0.0f;
-    float y = 0.0f;
-    float dx = -120.0f;
-    bool active = false;
-};
-
-struct BOMBA {
-    float x = 0.0f;
-    float y = 0.0f;
-    float dy = 200.0f;
-    bool active = false;
-};
-
-struct Obstacle {
-    float world_x = 0.0f;
-    float width = 48.0f;
-    int   type = 0;       // 0 = яма, 1 = камень, 2 = кратер
-    bool  active = false;
-};
-
-struct Star {
-    float x = 0.0f;
-    float y = 0.0f;
-    uint8_t brightness = 200;
-    float parallax = 0.15f;   // 0.06 slow / 0.15 normal / 0.30 fast
-};
-
-
-// ─────────────────────────────────────────────────────────────
-// Zones helpers
-// ─────────────────────────────────────────────────────────────
-static char zone_letter(int idx) {
-    if (idx < 0)  idx = 0;
-    if (idx > 25) idx = 25;
-    return (char)('A' + idx);
-}
-
-// Groups: A(0) | B-E(1-4) | F-I(5-8) | J-M(9-12) | N-Q(13-16) | R-U(17-20) | V-Y(21-24) | Z(25)
-static int zone_group_first(int idx) {
-    if (idx <= 0)  return 0;
-    if (idx >= 25) return 25;
-    return ((idx - 1) / 4) * 4 + 1;
-}
-
-static int zone_group_num(int idx) {
-    if (idx <= 0)  return 1;
-    if (idx >= 25) return 8;
-    return ((idx - 1) / 4) + 2;
-}
-
-struct Player {
-    float y = 520.0f;
-    float vy = 0.0f;
-    float gravity = 800.0f;
-    float jump_force = -400.0f;
-    bool on_ground = true;
-    float screen_x = 120.0f;
-    float offset_x = 0.0f;
-};
-
-enum GameState {
-    STATE_ATTRACT   = 0,
-    STATE_PLAYING   = 1,
-    STATE_GAME_OVER = 2,
-    STATE_SCORE     = 3
-};
-
-struct AppState {
-    SDL_Window*   window   = nullptr;
-    SDL_Renderer* renderer = nullptr;
-    Layer         layers[3];
-    Player        player;
-    Bullet        bullets[10];
-    NLO           nlos[5];
-    BOMBA         bombas[5];
-    Star          stars[120];
-    Obstacle      obstacles[8];
-    float         obstacle_spawn_timer = 0.0f;
-    float         obstacle_spawn_interval = 3.0f;   // Normal; Hard=2.0f, Easy=5.0f
-    static constexpr int MAX_OBSTACLES_ACTIVE = 3;
-    int           difficulty = 1;   // 0=EASY, 1=NORMAL, 2=HARD   // Normal; Hard=3, Easy=7
-    int           score = 0;
-    GameState     state = STATE_ATTRACT;
-    float         state_timer = 0.0f;
-
-    // ── Zones system (A..Z, 8 groups) ──
-    static constexpr int   ZONES_TOTAL   = 26;      // A..Z
-    static constexpr float ZONE_DISTANCE = 2000.0f; // px per zone
-    static constexpr int   LIVES_START   = 3;
-    int   zone_index      = 0;              // 0=A, 25=Z
-    int   checkpoint_zone = 0;              // first letter of current group
-    float zone_time       = 0.0f;           // seconds in current zone
-    int   lives           = LIVES_START;
-    bool          paused = false;
-    float         enemy_spawn_timer = 0.0f;
-    float         bomb_spawn_timer = 0.0f;
-    static constexpr int MAX_NLOS = 2;   // Normal
-    static constexpr int MAX_BOMBAS   = 3;   // Normal   // 0-4: горизонтальные, 5-9: вертикальные
-    float         world_x = 0.0f;
-    float         auto_speed = 80.0f;
-};
+// (GameState и AppState вынесены в app.h)
 
 // 6 базовых цветов: 0=Brown, 1=Purple, 2=Green, 3=Blue, 4=Yellow, 5=Red
 static const SDL_Color BASE_COLORS[6] = {
@@ -263,7 +149,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
         const char* nm[3] = { "EASY", "NORMAL", "HARD" };
         SDL_Log("Difficulty: %s (%.1fs)", nm[start_diff], start_interval);
 
-        if (s->state == STATE_ATTRACT) {
+        if (s->state == STATE_MENU) {
             s->score = 0;
             s->player.y = 520.0f;
             s->player.vy = 0.0f;
@@ -288,14 +174,14 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
 
     // ── Space на экранах ATTRACT / GAME_OVER / SCORE ──
     if (e->key.key == SDLK_SPACE) {
-        if (s->state == STATE_ATTRACT || s->state == STATE_GAME_OVER || s->state == STATE_SCORE) {
+        if (s->state == STATE_MENU || s->state == STATE_GAME_OVER || s->state == STATE_SCORE) {
             if (s->state == STATE_GAME_OVER) {
                 s->state = STATE_SCORE;
                 s->state_timer = 0.0f;
                 return SDL_APP_CONTINUE;
             }
             // ATTRACT: force NORMAL. SCORE: продолжить с последней сложности.
-            if (s->state == STATE_ATTRACT) {
+            if (s->state == STATE_MENU) {
                 s->difficulty = 1;
                 s->obstacle_spawn_interval = 3.0f;
                 SDL_Log("START: NORMAL (Space)");
@@ -926,7 +812,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         // Звёзды (3 слоя параллакса)
         draw_stars(s->renderer, s->stars, 120, s->world_x);
 
-        if (s->state == STATE_ATTRACT) {
+        if (s->state == STATE_MENU) {
             SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 255);
             draw_text_centered(s->renderer, 220, "MOON PATROL ND", 8.0f);
             SDL_SetRenderDrawColor(s->renderer, 0x00, 0xff, 0x00, 180);
