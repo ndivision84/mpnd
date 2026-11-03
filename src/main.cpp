@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstdio>
 #include "app.h"
+#include "menu.h"
 
 // (structs вынесены в app.h)
 
@@ -127,6 +128,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int, char**) {
                 s->layers[i].tint.g,
                 s->layers[i].tint.b);
     }
+
+    menu_init(s);
+
     return SDL_APP_CONTINUE;
 }
 
@@ -135,46 +139,20 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* e) {
     if (e->type == SDL_EVENT_QUIT) return SDL_APP_SUCCESS;
     if (e->type != SDL_EVENT_KEY_DOWN) return SDL_APP_CONTINUE;
 
-    // ── Выбор сложности: 1/2/3 ──
-    // На ATTRACT: старт игры немедленно. В PLAYING: только смена сложности.
-    int start_diff = -1;
-    float start_interval = 0.0f;
-    if (e->key.key == SDLK_1) { start_diff = 0; start_interval = 5.0f; }
-    else if (e->key.key == SDLK_2) { start_diff = 1; start_interval = 3.0f; }
-    else if (e->key.key == SDLK_3) { start_diff = 2; start_interval = 2.0f; }
-
-    if (start_diff >= 0) {
-        s->difficulty = start_diff;
-        s->obstacle_spawn_interval = start_interval;
-        const char* nm[3] = { "EASY", "NORMAL", "HARD" };
-        SDL_Log("Difficulty: %s (%.1fs)", nm[start_diff], start_interval);
-
-        if (s->state == STATE_MENU) {
-            s->score = 0;
-            s->player.y = 520.0f;
-            s->player.vy = 0.0f;
-            s->player.offset_x = 0.0f;
-            s->player.on_ground = true;
-            for (int i = 0; i < 10; ++i) s->bullets[i].active = false;
-            for (int i = 0; i < 5; ++i) { s->nlos[i].active = false; s->bombas[i].active = false; }
-            for (int i = 0; i < 8; ++i) s->obstacles[i].active = false;
-            s->obstacle_spawn_timer = 0.0f;
-            s->enemy_spawn_timer    = 0.0f;
-            s->bomb_spawn_timer     = 0.0f;
-            s->world_x              = 0.0f;   // ROM: scroll=0 на init уровня
-            s->zone_index      = 0;
-            s->checkpoint_zone = 0;
-            s->zone_time       = 0.0f;
-            s->lives           = AppState::LIVES_START;
-            s->state = STATE_PLAYING;
-            SDL_Log("START: %s (immediate)", nm[start_diff]);
+    // ── Меню (patch_40b) ──
+    if (s->state == STATE_MENU || s->state == STATE_OPTIONS
+        || s->state == STATE_NAME_INPUT || s->state == STATE_LEADERBOARD) {
+        if (menu_handle_event(s, e)) {
+            if (s->should_quit) return SDL_APP_SUCCESS;
         }
         return SDL_APP_CONTINUE;
     }
 
+    // (1/2/3 handlers removed in patch_40b — use OPTIONS)
+
     // ── Space на экранах ATTRACT / GAME_OVER / SCORE ──
     if (e->key.key == SDLK_SPACE) {
-        if (s->state == STATE_MENU || s->state == STATE_GAME_OVER || s->state == STATE_SCORE) {
+        if (s->state == STATE_GAME_OVER || s->state == STATE_SCORE) {
             if (s->state == STATE_GAME_OVER) {
                 s->state = STATE_SCORE;
                 s->state_timer = 0.0f;
@@ -367,7 +345,7 @@ static void draw_glyph(SDL_Renderer* r, float x, float y, int code, float scale 
     }
 }
 
-static void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale = 4.0f) {
+void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale) {
     float cx = x;
     for (const char* p = s; *p; ) {
         unsigned char b0 = (unsigned char)*p;
@@ -402,7 +380,7 @@ static void draw_text(SDL_Renderer* r, float x, float y, const char* s, float sc
     }
 }
 
-static float text_width(const char* s, float scale) {
+float text_width(const char* s, float scale) {
     int n = 0;
     for (const char* p = s; *p; ) {
         unsigned char b0 = (unsigned char)*p;
@@ -412,7 +390,7 @@ static float text_width(const char* s, float scale) {
     return n * 6.0f * scale;
 }
 
-static void draw_text_centered(SDL_Renderer* r, float y, const char* s, float scale) {
+void draw_text_centered(SDL_Renderer* r, float y, const char* s, float scale) {
     float x = (800.0f - text_width(s, scale)) / 2.0f;
     draw_text(r, x, y, s, scale);
 }
@@ -530,6 +508,24 @@ static void player_died(AppState* s, const char* reason) {
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
     auto* s = static_cast<AppState*>(appstate);
+
+    // ── Меню (patch_40b): early-return для MENU/OPTIONS ──
+    if (s->state == STATE_MENU || s->state == STATE_OPTIONS) {
+        static Uint64 last_menu_tick = 0;
+        Uint64 now_menu = SDL_GetTicks();
+        if (last_menu_tick == 0) last_menu_tick = now_menu;
+        float menu_dt = (now_menu - last_menu_tick) / 1000.0f;
+        last_menu_tick = now_menu;
+        if (menu_dt > 0.1f) menu_dt = 0.1f;
+
+        menu_update(s, menu_dt);
+        SDL_SetRenderDrawColor(s->renderer, 0, 0, 0, 255);
+        SDL_RenderClear(s->renderer);
+        menu_render(s->renderer, s);
+        SDL_RenderPresent(s->renderer);
+        return SDL_APP_CONTINUE;
+    }
+
     static Uint64 last_tick = 0;
     Uint64 now_tick = SDL_GetTicks();
     if (last_tick == 0) last_tick = now_tick;

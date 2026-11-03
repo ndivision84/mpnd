@@ -143,6 +143,7 @@ struct AppState {
     // ── Флаги ──
     bool  new_high_score   = false;
     bool  menu_initialized = false;
+    bool  should_quit      = false;
 };
 
 // ─── Zones helpers (inline, используются в main.cpp) ────────
@@ -166,3 +167,8 @@ inline int zone_group_num(int idx) {
     if (idx >= 25) return 8;
     return ((idx - 1) / 4) + 2;
 }
+
+// ─── Extern из main.cpp (patch_40b) ─────────────────────────
+void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale = 4.0f);
+float text_width(const char* s, float scale);
+void draw_text_centered(SDL_Renderer* r, float y, const char* s, float scale);
