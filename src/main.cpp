@@ -332,8 +332,9 @@ static void draw_glyph(SDL_Renderer* r, float x, float y, int code, float scale 
         {0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11},  // К (47)
         {0x11, 0x11, 0x13, 0x15, 0x19, 0x11, 0x11},  // И (48)
         {0x15, 0x15, 0x15, 0x1F, 0x15, 0x15, 0x15},  // Ж (49)
+        {0x18, 0x1C, 0x1E, 0x1F, 0x1E, 0x1C, 0x18},  // > (50) cursor
     };
-    if (code < 0 || code > 49) return;
+    if (code < 0 || code > 50) return;
     for (int row = 0; row < 7; ++row) {
         uint8_t bits = glyphs[code][row];
         for (int col = 0; col < 5; ++col) {
@@ -373,6 +374,7 @@ void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale) {
         } else if (b0 >= '0' && b0 <= '9') { code = b0 - '0'; p++; }
         else if (b0 >= 'A' && b0 <= 'Z') { code = 10 + (b0 - 'A'); p++; }
         else if (b0 == ':') { code = 36; p++; }
+        else if (b0 == '>') { code = 50; p++; }
         else if (b0 == ' ') { cx += 6.0f * scale; p++; continue; }
         else { cx += 8; p++; continue; }
         if (code >= 0) draw_glyph(r, cx, y, code, scale);
