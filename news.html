@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Patrol ND — NEWS</title>
+<style>
+:root {
+  --bg: #050505; --bg-soft: #0a120a;
+  --text: #00dd44; --text-bright: #00ff88; --text-dim: #007744;
+  --border: #0a3a0a; --accent: #33ff99; --code-bg: #061006;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px; line-height: 1.65;
+}
+header {
+  background: linear-gradient(180deg, #030803 0%, #0a120a 100%);
+  border-bottom: 2px solid var(--border);
+  padding: 20px 30px; text-align: center;
+}
+header h1 {
+  margin: 0 0 8px 0; color: var(--text-bright);
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  font-size: 26px; letter-spacing: 1px;
+}
+header .subtitle {
+  color: var(--text-dim); font-size: 14px;
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+}
+header .links {
+  margin-top: 14px; display: flex; gap: 20px;
+  justify-content: center; flex-wrap: wrap;
+}
+header .links a {
+  color: var(--accent); text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 6px 14px; border-radius: 4px; font-size: 13px;
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+}
+header .links a:hover {
+  background: var(--bg-soft); border-color: var(--accent);
+  color: var(--text-bright);
+}
+main { max-width: 900px; margin: 0 auto; padding: 40px 30px 60px; }
+.news-entry {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  padding: 20px 24px; margin: 0 0 30px 0;
+}
+.news-date {
+  color: var(--text-bright);
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  font-size: 14px; letter-spacing: 1px; margin-bottom: 4px;
+}
+.news-version {
+  color: var(--accent);
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  font-size: 18px; font-weight: 600;
+  margin-bottom: 20px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.news-section {
+  color: var(--accent);
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  font-size: 15px; margin: 20px 0 8px 0;
+  letter-spacing: 0.5px;
+}
+.news-subsection {
+  color: var(--text-bright);
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  font-size: 14px; margin: 16px 0 6px 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.news-para { margin: 8px 0; color: var(--text); }
+.news-entry ul { margin: 8px 0; padding-left: 24px; }
+.news-entry li { margin: 4px 0; }
+.news-sublist { margin: 4px 0; padding-left: 20px; list-style: circle; }
+.news-sublist li { color: var(--text-dim); }
+code {
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  background: var(--code-bg); padding: 2px 6px;
+  border-radius: 3px; color: var(--text-bright); font-size: 13px;
+}
+footer {
+  text-align: center; padding: 30px 20px;
+  color: var(--text-dim); font-size: 12px;
+  font-family: Menlo, Monaco, 'Courier New', monospace;
+  border-top: 2px solid var(--border);
+}
+@media (max-width: 700px) {
+  main { padding: 20px 15px 40px; }
+  header { padding: 15px; }
+  header h1 { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📰 Moon Patrol ND — NEWS</h1>
+  <div class="subtitle">Новости проекта по датам</div>
+  <div class="links">
+    <a href="README.html">📖 README</a>
+    <a href="https://github.com/ndivision84/mpnd">📦 GitHub</a>
+    <a href="docs/report.html">📊 Технический отчёт</a>
+  </div>
+</header>
+
+<main>
+<article class="news-entry">
+  <div class="news-date">2026-11-04</div>
+  <div class="news-version">v20261104 · «REFACTOR STEP 1 + MAIN MENU»</div>
+  <h2 class="news-section">▸ РЕФАКТОРИНГ: ВЫНОС СТРУКТУР В app.h</h2>
+  <ul>
+    <li>src/app.h (189 строк) — все структуры данных:</li>
+  </ul>
+  <p class="news-para">- Игровые: Layer, Bullet, NLO, BOMBA, Obstacle, Star, Player</p>
+  <p class="news-para">- Меню: ScoreEntry, Settings</p>
+  <p class="news-para">- Состояния: GameState (7 значений)</p>
+  <p class="news-para">- AppState (все поля игры + меню)</p>
+  <p class="news-para">- Inline-функции zones: zone_letter, zone_group_first, zone_group_num</p>
+  <ul>
+    <li>src/main.cpp похудел на ~220 строк (1057 вместо ~1280)</li>
+    <li>Старые struct-дубликаты удалены из main.cpp</li>
+  </ul>
+  <h2 class="news-section">▸ СКЕЛЕТ МОДУЛЕЙ (patch_39)</h2>
+  <p class="news-para">Новые файлы (пока с заглушками):</p>
+  <ul>
+    <li>src/menu.h / menu.cpp       — главное меню, OPTIONS</li>
+    <li>src/scores.h / scores.cpp   — TOP-10 (JSON, будет в patch_43)</li>
+    <li>src/settings.h / settings.cpp — persistent settings (JSON, patch_44)</li>
+    <li>CMakeLists не правился — file(GLOB_RECURSE) подхватывает *.cpp сам</li>
+  </ul>
+  <h2 class="news-section">▸ ГЛАВНОЕ МЕНЮ (patch_40b/40c/40d)</h2>
+  <ul>
+    <li>Квадрат 400×280 в центре, 3 пункта: NEW GAME / OPTIONS / QUIT</li>
+    <li>Навигация: ↑/↓ (циклическая), SPACE — выбор</li>
+    <li>Курсор: стрелка ▶ + яркий цвет выбранного пункта</li>
+    <li>NEW GAME: сброс всех полей (score, zone, lives, obstacles, timers, world_x),
+      <ul class="news-sublist">
+        <li>старт с настройками из s-&gt;settings</li>
+      </ul></li>
+    <li>OPTIONS: подменю-заглушка (реальная функциональность — patch_41)</li>
+    <li>QUIT: выход через should_quit → SDL_APP_SUCCESS</li>
+    <li>Старые клавиши 1/2/3 удалены (сложность теперь через OPTIONS)</li>
+    <li>Глиф &#x27;&gt;&#x27; (код 50) добавлен в шрифт 5×7 — для курсора</li>
+    <li>draw_text / text_width / draw_text_centered вынесены из static
+      <ul class="news-sublist">
+        <li>(extern в app.h), чтобы menu.cpp мог их использовать</li>
+      </ul></li>
+  </ul>
+  <h2 class="news-section">▸ АРХИТЕКТУРНОЕ РЕШЕНИЕ (early-return в SDL_AppIterate)</h2>
+  <p class="news-para">В начале SDL_AppIterate — проверка состояния:</p>
+  <p class="news-para">if (state == STATE_MENU || state == STATE_OPTIONS) {</p>
+  <p class="news-para">menu_update(s, dt);</p>
+  <p class="news-para">SDL_RenderClear();</p>
+  <p class="news-para">menu_render(s-&gt;renderer, s);</p>
+  <p class="news-para">SDL_RenderPresent();</p>
+  <p class="news-para">return SDL_APP_CONTINUE;</p>
+  <p class="news-para">}</p>
+  <p class="news-para">Старый код ATTRACT-рендера остаётся в файле как «мёртвый код» —</p>
+  <p class="news-para">вычистим отдельным патчем позже. Это безопаснее, чем замена больших</p>
+  <p class="news-para">блоков через re.sub (в первой версии patch_40 такое привело к удалению</p>
+  <p class="news-para">~900 строк main.cpp и потребовало откат).</p>
+  <h2 class="news-section">▸ ЗАДЕЛ НА БУДУЩЕЕ</h2>
+  <ul>
+    <li>s-&gt;settings (player_name, difficulty, attempts) — уже в AppState</li>
+    <li>s-&gt;top_scores (vector&lt;ScoreEntry&gt;) — уже в AppState</li>
+    <li>s-&gt;should_quit — уже используется для выхода</li>
+    <li>s-&gt;menu_cursor / options_cursor / name_input[11] — поля готовы</li>
+    <li>Все новые GameState-значения (MENU, OPTIONS, NAME_INPUT, LEADERBOARD)
+      <ul class="news-sublist">
+        <li>в enum — можно включать по мере готовности</li>
+      </ul></li>
+  </ul>
+  <h2 class="news-section">▸ КОММИТЫ СЕГОДНЯ (feature/menu-scores)</h2>
+  <ul>
+    <li>52f117e  refactor(step 1): extract app.h + skeleton menu/scores/settings</li>
+    <li>766e5fe  menu: main menu (NEW GAME/OPTIONS/QUIT) + OPTIONS stub</li>
+    <li>d549980  menu: cursor &#x27;&gt;&#x27; glyph + options layout fix</li>
+  </ul>
+  <h2 class="news-section">▸ ФАЙЛЫ ПАТЧЕЙ</h2>
+  <ul>
+    <li>tools/patches/patch_38b_strip_structs_from_main.py</li>
+    <li>tools/patches/patch_39_skeleton_modules.py</li>
+    <li>tools/patches/patch_40b_safe.py</li>
+    <li>tools/patches/patch_40c_options_fix.py</li>
+    <li>tools/patches/patch_40d_cursor_fix.py</li>
+    <li>tools/patches/patch_41_news_html.py</li>
+    <li>tools/patches/patch_42_readme_html_update.py</li>
+    <li>tools/patches/patch_43_news_html_v2.py</li>
+  </ul>
+  <h2 class="news-section">▸ СЛЕДУЮЩИЕ ШАГИ</h2>
+  <ul>
+    <li>[1] patch_44 — OPTIONS: DIFFICULTY + LIVES со стрелками ←/→</li>
+    <li>[2] patch_45 — NAME: ввод до 10 символов (A-Z, 0-9, Backspace)</li>
+    <li>[3] patch_46 — TOP SCORES: просмотр таблицы</li>
+    <li>[4] patch_47 — JSON: сохранение/загрузка settings.json, scores.json</li>
+    <li>[5] patch_48 — интеграция: GAME_OVER → TOP SCORES, авто-сохранение</li>
+  </ul>
+</article>
+<article class="news-entry">
+  <div class="news-date">2026-10-30</div>
+  <div class="news-version">v20261030 · «ZONES &amp; LIVES»</div>
+  <h3 class="news-subsection">СЕГОДНЯШНИЙ ОБЪЁМ РАБОТ</h3>
+  <h2 class="news-section">▸ СИСТЕМА ЖИЗНЕЙ (3 жизни)</h2>
+  <ul>
+    <li>3 стартовые жизни (LIVES_START = 3)</li>
+    <li>Смерть в игре → respawn на чек-поинте, пока lives &gt; 0</li>
+    <li>Все 3 жизни потеряны → GAME_OVER (без обнуления счёта)</li>
+    <li>Единая функция player_died() для всех типов смерти:</li>
+  </ul>
+  <p class="news-para">- PIT (яма), ROCK (камень), CRATER (кратер)</p>
+  <p class="news-para">- NLO (тарелка), BOMB (бомба)</p>
+  <h2 class="news-section">▸ 26 ЗОН A-Z + 8 ГРУПП</h2>
+  <ul>
+    <li>world_x → zone_index = world_x / 2000px (cap на Z)</li>
+    <li>8 групп:
+      <ul class="news-sublist">
+        <li>Группа 1: A</li>
+        <li>Группа 2: B C D E</li>
+        <li>Группа 3: F G H I</li>
+        <li>Группа 4: J K L M</li>
+        <li>Группа 5: N O P Q</li>
+        <li>Группа 6: R S T U</li>
+        <li>Группа 7: V W X Y</li>
+        <li>Группа 8: Z</li>
+      </ul></li>
+    <li>A — тренировочная, Z — финальная</li>
+    <li>1 зона = 25 секунд (auto_speed 80px/сек, дистанция 2000px)</li>
+    <li>Полная игра ≈ 11 минут</li>
+  </ul>
+  <h2 class="news-section">▸ ЧЕК-ПОИНТЫ</h2>
+  <ul>
+    <li>checkpoint_zone = первая буква текущей группы</li>
+    <li>При смерти игрок respawn&#x27;ится с первой буквы своей группы:</li>
+  </ul>
+  <p class="news-para">- Погиб в E → старт с B (группа 2)</p>
+  <p class="news-para">- Погиб в O → старт с N (группа 5)</p>
+  <ul>
+    <li>Лог в терминале: DEATH → RESPAWN → CHECKPOINT</li>
+  </ul>
+  <h2 class="news-section">▸ HUD НА РУССКОМ (одна строка)</h2>
+  <ul>
+    <li>Формат: ЗОНА:A | ВРЕМЯ:00 | ОЧКИ:00000 | ЖИЗНИ:3 | РЕЖИМ:EASY</li>
+    <li>Шрифт 5×7 с поддержкой кириллицы (13 новых глифов)</li>
+    <li>UTF-8 декодер в draw_text (U+0410..U+042F)</li>
+    <li>Динамическое выравнивание (равные зазоры между блоками)</li>
+    <li>Убраны: TIME countdown 60→0, MODE:&lt;name&gt; в старом формате</li>
+  </ul>
+  <h2 class="news-section">▸ 3 СЛОЯ ЗВЁЗД (параллакс)</h2>
+  <ul>
+    <li>Звёзды на весь экран 800×600 (было: только верхняя половина)</li>
+    <li>Три скорости: slow (0.06) / normal (0.15) / fast (0.30)</li>
+    <li>Случайное распределение 1/3 на 1/3 на 1/3</li>
+    <li>Вынесено в draw_stars() helper</li>
+    <li>Средняя скорость ×3.4 от прежней</li>
+  </ul>
+  <h2 class="news-section">▸ СБРОС МИРА ПРИ СТАРТЕ (соответствие ROM)</h2>
+  <ul>
+    <li>world_x = 0 при старте из ATTRACT, из SPACE, из R</li>
+    <li>Соответствует ROM: scroll (0xE1E2) = 0 на init уровня (0x0BB7)</li>
+  </ul>
+  <h2 class="news-section">▸ ИСПРАВЛЕНИЯ БАГОВ</h2>
+  <p class="news-para">[КРИТИЧНО]</p>
+  <ul>
+    <li>TIME UP: проверка перенесена из рендера в update —
+      <ul class="news-sublist">
+        <li>больше нет кадра «TIME:00 + игра идёт»</li>
+      </ul></li>
+    <li>world_x: НЕ сбрасывался в 0 (мир «продолжался» после рестарта) —
+      <ul class="news-sublist">
+        <li>теперь сбрасывается</li>
+      </ul></li>
+    <li>Ложное срабатывание при patch_35: сброс world_x в блоке спавна
+      <ul class="news-sublist">
+        <li>бомб каждые 3 сек → мир телепортировался. Исправлено.</li>
+      </ul></li>
+  </ul>
+  <p class="news-para">[СРЕДНЕ]</p>
+  <ul>
+    <li>Порядок отрисовки: препятствия рисовались поверх лунохода —
+      <ul class="news-sublist">
+        <li>теперь луноход сверху (видно в кадре смерти от камня)</li>
+      </ul></li>
+    <li>enemy_spawn_timer / bomb_spawn_timer не сбрасывались при новой
+      <ul class="news-sublist">
+        <li>игре — NLO/бомбы вылетали мгновенно после R. Исправлено.</li>
+      </ul></li>
+  </ul>
+  <p class="news-para">[МЕЛОЧИ]</p>
+  <ul>
+    <li>Удалён мёртвый код: draw_score(), draw_game_over() → #if 0</li>
+    <li>Закомментирован неиспользуемый int score</li>
+    <li>Добавлен #include &lt;cstdio&gt; для snprintf</li>
+    <li>Добавлено поле float parallax в struct Star</li>
+  </ul>
+  <h2 class="news-section">▸ ТЕХНИЧЕСКИЕ ХАРАКТЕРИСТИКИ</h2>
+  <p class="news-para">Зон:              26 (A..Z)</p>
+  <p class="news-para">Групп:            8</p>
+  <p class="news-para">Зона = дистанция: 2000 px</p>
+  <p class="news-para">Скорость:         80 px/сек</p>
+  <p class="news-para">1 зона = время:   25 сек</p>
+  <p class="news-para">Полная игра:      ~650 сек (11 мин)</p>
+  <p class="news-para">Жизней:           3</p>
+  <p class="news-para">Чек-поинт:        первая буква группы</p>
+  <p class="news-para">FPS:              VSync (60 Гц)</p>
+  <h2 class="news-section">▸ ФАЙЛЫ ПАТЧЕЙ (tools/patches/)</h2>
+  <p class="news-para">patch_33_misc_fixes.py</p>
+  <p class="news-para">patch_34_stars_fullscreen_parallax.py</p>
+  <p class="news-para">patch_34b_star_parallax_field.py</p>
+  <p class="news-para">patch_35_world_x_reset.py</p>
+  <p class="news-para">patch_35b_world_x_reset_fix.py</p>
+  <p class="news-para">patch_36_zones_system.py</p>
+  <p class="news-para">patch_37_hud_russian.py</p>
+  <p class="news-para">patch_37b_fix_glyph_indent.py</p>
+  <p class="news-para">patch_37c_cstdio.py</p>
+  <h2 class="news-section">▸ СЛЕДУЮЩИЕ ШАГИ (см. план ниже)</h2>
+  <p class="news-para">[1] Player name + TOP-10 (JSON-файл)</p>
+  <p class="news-para">[2] Рефакторинг main.cpp → модули</p>
+  <p class="news-para">[3] Изменение стартового меню</p>
+  <p class="news-para">[4] MPND_ART: спрайты и заставки</p>
+  <p class="news-para">[5] MPND_SOUND: движок музыки и звука</p>
+</article>
+</main>
+
+<footer>
+  Moon Patrol ND · v20261104 · Nordic Division · 2026
+</footer>
+
+</body>
+</html>
