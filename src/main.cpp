@@ -333,8 +333,15 @@ static void draw_glyph(SDL_Renderer* r, float x, float y, int code, float scale 
         {0x11, 0x11, 0x13, 0x15, 0x19, 0x11, 0x11},  // И (48)
         {0x15, 0x15, 0x15, 0x1F, 0x15, 0x15, 0x15},  // Ж (49)
         {0x18, 0x1C, 0x1E, 0x1F, 0x1E, 0x1C, 0x18},  // > (50) cursor
+        {0x04, 0x04, 0x1F, 0x04, 0x04, 0x00, 0x00},  // + (51)
+        {0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00},  // - (52)
+        {0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C},  // . (53)
+        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F},  // _ (54)
+        {0x01, 0x02, 0x02, 0x04, 0x08, 0x08, 0x10},  // / (55)
+        {0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02},  // ( (56)
+        {0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08},  // ) (57)
     };
-    if (code < 0 || code > 50) return;
+    if (code < 0 || code > 57) return;
     for (int row = 0; row < 7; ++row) {
         uint8_t bits = glyphs[code][row];
         for (int col = 0; col < 5; ++col) {
@@ -346,6 +353,13 @@ static void draw_glyph(SDL_Renderer* r, float x, float y, int code, float scale 
     }
 }
 
+// UTF-8 кириллица → код глифа (U+0410..U+042F)
+static const struct { uint8_t b1; int code; } CYR_MAP[] = {
+    {0x90, 40}, {0x92, 41}, {0x95, 43}, {0x96, 49}, {0x97, 37},
+    {0x98, 48}, {0x9A, 47}, {0x9C, 44}, {0x9D, 39}, {0x9E, 38},
+    {0xA0, 42}, {0xA7, 46}, {0xAF, 45},
+};
+
 void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale) {
     float cx = x;
     for (const char* p = s; *p; ) {
@@ -354,20 +368,8 @@ void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale) {
         if (b0 >= 0x80) {
             if (b0 == 0xD0 && *(p+1)) {
                 unsigned char b1 = (unsigned char)*(p+1);
-                switch (b1) {
-                    case 0x97: code = 37; break; // З
-                    case 0x9E: code = 38; break; // О
-                    case 0x9D: code = 39; break; // Н
-                    case 0x90: code = 40; break; // А
-                    case 0x92: code = 41; break; // В
-                    case 0xA0: code = 42; break; // Р
-                    case 0x95: code = 43; break; // Е
-                    case 0x9C: code = 44; break; // М
-                    case 0xAF: code = 45; break; // Я
-                    case 0xA7: code = 46; break; // Ч
-                    case 0x9A: code = 47; break; // К
-                    case 0x98: code = 48; break; // И
-                    case 0x96: code = 49; break; // Ж
+                for (auto& entry : CYR_MAP) {
+                    if (entry.b1 == b1) { code = entry.code; break; }
                 }
                 p += 2;
             } else { p += 1; continue; }
@@ -375,6 +377,13 @@ void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale) {
         else if (b0 >= 'A' && b0 <= 'Z') { code = 10 + (b0 - 'A'); p++; }
         else if (b0 == ':') { code = 36; p++; }
         else if (b0 == '>') { code = 50; p++; }
+        else if (b0 == '+') { code = 51; p++; }
+        else if (b0 == '-') { code = 52; p++; }
+        else if (b0 == '.') { code = 53; p++; }
+        else if (b0 == '_') { code = 54; p++; }
+        else if (b0 == '/') { code = 55; p++; }
+        else if (b0 == '(') { code = 56; p++; }
+        else if (b0 == ')') { code = 57; p++; }
         else if (b0 == ' ') { cx += 6.0f * scale; p++; continue; }
         else { cx += 8; p++; continue; }
         if (code >= 0) draw_glyph(r, cx, y, code, scale);
