@@ -340,8 +340,9 @@ static void draw_glyph(SDL_Renderer* r, float x, float y, int code, float scale 
         {0x01, 0x02, 0x02, 0x04, 0x08, 0x08, 0x10},  // / (55)
         {0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02},  // ( (56)
         {0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08},  // ) (57)
+        {0x10, 0x08, 0x04, 0x02, 0x04, 0x08, 0x10},  // < (58) left arrow
     };
-    if (code < 0 || code > 57) return;
+    if (code < 0 || code > 58) return;
     for (int row = 0; row < 7; ++row) {
         uint8_t bits = glyphs[code][row];
         for (int col = 0; col < 5; ++col) {
@@ -384,6 +385,7 @@ void draw_text(SDL_Renderer* r, float x, float y, const char* s, float scale) {
         else if (b0 == '/') { code = 55; p++; }
         else if (b0 == '(') { code = 56; p++; }
         else if (b0 == ')') { code = 57; p++; }
+        else if (b0 == '<') { code = 58; p++; }
         else if (b0 == ' ') { cx += 6.0f * scale; p++; continue; }
         else { cx += 8; p++; continue; }
         if (code >= 0) draw_glyph(r, cx, y, code, scale);
