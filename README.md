@@ -1,97 +1,31 @@
 # Moon Patrol ND
 
-Реимплементация аркадной игры **Moon Patrol** (Irem, 1982) на **C++ / SDL3**.
+A reimplementation of the arcade classic **Moon Patrol** (Irem, 1982) in C++ / SDL3.
 
-Версия: **20261027**
+Реимплементация аркадной игры **Moon Patrol** (Irem, 1982) на C++ / SDL3.
 
-## Быстрый старт
+**Version / Версия:** [20261105](VERSION)
 
-Шаги:
+---
 
-1. Установить зависимости (macOS):
+## Documentation / Документация
 
-    brew install sdl3 sdl3_image cmake
+- **[README.html](README.html)** — full project description / полное описание проекта
+- **[news.html](news.html)** — release notes and changelog / новости и история версий
+- **[docs/report.html](docs/report.html)** — ROM reverse-engineering report / технический отчёт по реверс-инжинирингу ROM
 
-2. Сгенерировать ассеты из ROM (нужны легально приобретённые ROM-файлы).
-   Положить ROM в orig_rom/ рядом с mpng_src/:
+---
 
-    python3 tools/decode_bg.py
-    python3 tools/extract_level.py
-    python3 tools/extract_known.py
+## Quick start / Быстрый старт
+brew install sdl3 sdl3_image cmake
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build -j
+./build/moon_patrol_nd.app/Contents/MacOS/moon_patrol_nd
 
-3. Сборка:
+---
 
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-    cmake --build build -j
+## Links / Ссылки
 
-4. Запуск:
-
-    ./build/moon_patrol_nd.app/Contents/MacOS/moon_patrol_nd
-
-## Управление
-
-| Клавиша | Действие |
-|---|---|
-| ← → | движение |
-| ↑ | прыжок |
-| Space (ATTRACT) | старт игры |
-| Space (PLAYING) | стрельба (горизонтальная + вертикальная пуля) |
-| Space (GAME_OVER) | переход к экрану SCORE |
-| Space (SCORE) | новая игра |
-| P | пауза |
-| G | game over (отладка) |
-| R | restart |
-
-Экраны состояний: **ATTRACT** (заставка) → **PLAYING** (игра) → **GAME_OVER** → **SCORE** (крупный счёт) → **PLAYING**.
-
-## Структура
-
-    mpng_src/
-    ├── src/main.cpp              # вся игра (один файл, ~1200 строк)
-    ├── CMakeLists.txt
-    ├── tools/
-    │   ├── analyze_mpatrol.py    # проверка CRC/энтропии ROM
-    │   ├── decode_bg.py          # распаковка фонов
-    │   ├── extract_level.py      # распаковка RLE-уровня
-    │   ├── extract_known.py      # charset + HUD
-    │   └── patches/              # история патчей (Python)
-    ├── docs/
-    │   ├── report.html           # полный технический отчёт
-    │   └── analysis_report_v*.txt
-    ├── assets/
-    │   ├── tiles/                # генерируется (PNG)
-    │   ├── levels/               # генерируется (JSON)
-    │   └── sprites/              # опционально (ROM-спрайты)
-    ├── third_party/nlohmann/     # json.hpp (header-only)
-    ├── CHANGELOG.md
-    └── VERSION
-
-## Что готово
-
-- 3 слоя параллакса + случайные палитры
-- Звёздное небо (120 точек, параллакс)
-- Луноход: движение, прыжок, стрельба
-- NLO (тарелки), BOMBA (бомбы), препятствия (яма/камень/кратер)
-- Счёт, пауза, game over, restart
-- Три экрана состояний: ATTRACT (заставка), GAME_OVER, SCORE (крупный счёт)
-- Центрирование надписей (`draw_text_centered`)
-- Полный реверс-инжиниринг (см. docs/report.html)
-
-## Что в планах
-
-- ROM-спрайты NLO/камней (MAME-скриншоты или декодирование mpb-*)
-- HUD: TIME, CAUTION
-- Уровни сложности (Easy/Normal/Hard)
-- 3 жизни + game over loop
-
-## Правовая заметка
-
-ROM-файлы Moon Patrol © Irem / Williams. Они не входят в репозиторий и должны
-быть приобретены/найдены пользователем отдельно. assets/* — производные
-(декодированные) из ROM — не коммитятся в git (см. .gitignore), генерируются
-локально. Код игры — независимая реимплементация, не содержит оригинальных ROM.
-
-## Ссылки
-
-- Репозиторий: https://github.com/ndivision84/mpnd
-- Технический отчёт: docs/report.html
+- **Repository / Репозиторий:** https://github.com/ndivision84/mpnd
+- **Releases / Релизы:** https://github.com/ndivision84/mpnd/releases
+- **License / Лицензия:** ROM assets (c) Irem / Williams (not included, not distributed)
