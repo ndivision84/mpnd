@@ -17,10 +17,11 @@ A reimplementation of the arcade classic **Moon Patrol** (Irem, 1982) in C++ / S
 ---
 
 ## Quick start / Быстрый старт
-brew install sdl3 sdl3_image cmake
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build -j
-./build/moon_patrol_nd.app/Contents/MacOS/moon_patrol_nd
+
+    brew install sdl3 sdl3_image cmake
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+    cmake --build build -j
+    ./build/moon_patrol_nd.app/Contents/MacOS/moon_patrol_nd
 
 ---
 
