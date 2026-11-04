@@ -3,6 +3,149 @@
  Реимплементация аркадной игры Moon Patrol (Irem, 1982) на C++ / SDL3
 ================================================================================
 
+================================================================================
+ 2026-11-05 · v20261105 · «OPTIONS READY»
+================================================================================
+
+▸ РАСШИРЕНИЕ ШРИФТА (patch_44a)
+
+• 13 кириллических глифов объединены в таблицу CYR_MAP[] (13 пар)
+• switch (b1) → цикл по CYR_MAP: добавление новой буквы = 1 строка
+• +7 ASCII-символов в glyphs (коды 51-57):
+  - + (плюс), - (минус), . (точка), _ (подчёркивание)
+  - / (слэш), ( (скобка), ) (скобка)
+• +глиф < (код 58) — левая стрелка для OPTIONS
+• draw_glyph bound: 50 → 58
+• draw_text: обработка 8 новых символов, UTF-8 декодер упрощён (-8 строк)
+
+▸ РЕАЛЬНЫЙ OPTIONS (patch_44c)
+
+• render_options переписан:
+  - 5 строк: DIFFICULTY, NAME, LIVES, TOP SCORES, BACK
+  - Курсор ▶ у выбранного пункта
+  - Значения с парой < > для DIFFICULTY и LIVES
+  - Цвета: яркий (выбран), тусклый (остальные)
+• handle_options_event переписан:
+  - ↑↓ — навигация по 5 пунктам (циклическая)
+  - ←→ — изменение значения (только DIFFICULTY и LIVES)
+  - SPACE — вход в NAME / TOP SCORES / BACK (заглушки)
+  - ESC — возврат в главное меню
+• Логика значений:
+  - DIFFICULTY: EASY(0) ↔ NORMAL(1) ↔ HARD(2) — цикл
+  - LIVES: 1 ↔ 3 ↔ 7 — цикл
+  - Изменения сразу пишутся в s->settings
+• NEW GAME берёт difficulty и attempts из s->settings
+• Связка работает: OPTIONS → HARD + 7 → NEW GAME → HUD HARD + 7
+
+▸ КОММИТЫ СЕГОДНЯ
+
+• 3356179  refactor: utf8 table (CYR_MAP) + 7 ascii glyphs
+• 3c04301  menu: real OPTIONS (difficulty + lives with < > arrows)
+
+▸ ФАЙЛЫ ПАТЧЕЙ
+
+• tools/patches/patch_44a_utf8_table.py
+• tools/patches/patch_44b_left_arrow.py
+• tools/patches/patch_44c_options_real.py
+
+▸ СЛЕДУЮЩИЕ ШАГИ
+
+• [1] patch_45 — NAME input (A-Z, 0-9, Backspace, SPACE, ESC)
+• [2] patch_46 — TOP SCORES: просмотр таблицы
+• [3] patch_47 — JSON: сохранение/загрузка settings.json, scores.json
+• [4] patch_48 — интеграция: GAME_OVER → TOP SCORES
+
+================================================================================
+
+================================================================================
+ 2026-11-04 · v20261104 · «REFACTOR STEP 1 + MAIN MENU»
+================================================================================
+
+▸ РЕФАКТОРИНГ: ВЫНОС СТРУКТУР В app.h
+
+• src/app.h (189 строк) — все структуры данных:
+  - Игровые: Layer, Bullet, NLO, BOMBA, Obstacle, Star, Player
+  - Меню: ScoreEntry, Settings
+  - Состояния: GameState (7 значений)
+  - AppState (все поля игры + меню)
+  - Inline-функции zones: zone_letter, zone_group_first, zone_group_num
+• src/main.cpp похудел на ~220 строк (1057 вместо ~1280)
+• Старые struct-дубликаты удалены из main.cpp
+
+▸ СКЕЛЕТ МОДУЛЕЙ (patch_39)
+
+Новые файлы (пока с заглушками):
+• src/menu.h / menu.cpp       — главное меню, OPTIONS
+• src/scores.h / scores.cpp   — TOP-10 (JSON, будет в patch_43)
+• src/settings.h / settings.cpp — persistent settings (JSON, patch_44)
+• CMakeLists не правился — file(GLOB_RECURSE) подхватывает *.cpp сам
+
+▸ ГЛАВНОЕ МЕНЮ (patch_40b/40c/40d)
+
+• Квадрат 400×280 в центре, 3 пункта: NEW GAME / OPTIONS / QUIT
+• Навигация: ↑/↓ (циклическая), SPACE — выбор
+• Курсор: стрелка ▶ + яркий цвет выбранного пункта
+• NEW GAME: сброс всех полей (score, zone, lives, obstacles, timers, world_x),
+  старт с настройками из s->settings
+• OPTIONS: подменю-заглушка (реальная функциональность — patch_41)
+• QUIT: выход через should_quit → SDL_APP_SUCCESS
+• Старые клавиши 1/2/3 удалены (сложность теперь через OPTIONS)
+• Глиф '>' (код 50) добавлен в шрифт 5×7 — для курсора
+• draw_text / text_width / draw_text_centered вынесены из static
+  (extern в app.h), чтобы menu.cpp мог их использовать
+
+▸ АРХИТЕКТУРНОЕ РЕШЕНИЕ (early-return в SDL_AppIterate)
+
+В начале SDL_AppIterate — проверка состояния:
+  if (state == STATE_MENU || state == STATE_OPTIONS) {
+      menu_update(s, dt);
+      SDL_RenderClear();
+      menu_render(s->renderer, s);
+      SDL_RenderPresent();
+      return SDL_APP_CONTINUE;
+  }
+
+Старый код ATTRACT-рендера остаётся в файле как «мёртвый код» —
+вычистим отдельным патчем позже. Это безопаснее, чем замена больших
+блоков через re.sub (в первой версии patch_40 такое привело к удалению
+~900 строк main.cpp и потребовало откат).
+
+▸ ЗАДЕЛ НА БУДУЩЕЕ
+
+• s->settings (player_name, difficulty, attempts) — уже в AppState
+• s->top_scores (vector<ScoreEntry>) — уже в AppState
+• s->should_quit — уже используется для выхода
+• s->menu_cursor / options_cursor / name_input[11] — поля готовы
+• Все новые GameState-значения (MENU, OPTIONS, NAME_INPUT, LEADERBOARD)
+  в enum — можно включать по мере готовности
+
+▸ КОММИТЫ СЕГОДНЯ (feature/menu-scores)
+
+• 52f117e  refactor(step 1): extract app.h + skeleton menu/scores/settings
+• 766e5fe  menu: main menu (NEW GAME/OPTIONS/QUIT) + OPTIONS stub
+• d549980  menu: cursor '>' glyph + options layout fix
+
+▸ ФАЙЛЫ ПАТЧЕЙ
+
+• tools/patches/patch_38b_strip_structs_from_main.py
+• tools/patches/patch_39_skeleton_modules.py
+• tools/patches/patch_40b_safe.py
+• tools/patches/patch_40c_options_fix.py
+• tools/patches/patch_40d_cursor_fix.py
+• tools/patches/patch_41_news_html.py
+• tools/patches/patch_42_readme_html_update.py
+• tools/patches/patch_43_news_html_v2.py
+
+▸ СЛЕДУЮЩИЕ ШАГИ
+
+• [1] patch_44 — OPTIONS: DIFFICULTY + LIVES со стрелками ←/→
+• [2] patch_45 — NAME: ввод до 10 символов (A-Z, 0-9, Backspace)
+• [3] patch_46 — TOP SCORES: просмотр таблицы
+• [4] patch_47 — JSON: сохранение/загрузка settings.json, scores.json
+• [5] patch_48 — интеграция: GAME_OVER → TOP SCORES, авто-сохранение
+
+================================================================================
+
 --------------------------------------------------------------------------------
  2026-10-30 · v20261030 · «ZONES & LIVES»
 --------------------------------------------------------------------------------
@@ -110,148 +253,5 @@
   [3] Изменение стартового меню
   [4] MPND_ART: спрайты и заставки
   [5] MPND_SOUND: движок музыки и звука
-
-================================================================================
-
-================================================================================
- 2026-11-04 · v20261104 · «REFACTOR STEP 1 + MAIN MENU»
-================================================================================
-
-▸ РЕФАКТОРИНГ: ВЫНОС СТРУКТУР В app.h
-
-• src/app.h (189 строк) — все структуры данных:
-  - Игровые: Layer, Bullet, NLO, BOMBA, Obstacle, Star, Player
-  - Меню: ScoreEntry, Settings
-  - Состояния: GameState (7 значений)
-  - AppState (все поля игры + меню)
-  - Inline-функции zones: zone_letter, zone_group_first, zone_group_num
-• src/main.cpp похудел на ~220 строк (1057 вместо ~1280)
-• Старые struct-дубликаты удалены из main.cpp
-
-▸ СКЕЛЕТ МОДУЛЕЙ (patch_39)
-
-Новые файлы (пока с заглушками):
-• src/menu.h / menu.cpp       — главное меню, OPTIONS
-• src/scores.h / scores.cpp   — TOP-10 (JSON, будет в patch_43)
-• src/settings.h / settings.cpp — persistent settings (JSON, patch_44)
-• CMakeLists не правился — file(GLOB_RECURSE) подхватывает *.cpp сам
-
-▸ ГЛАВНОЕ МЕНЮ (patch_40b/40c/40d)
-
-• Квадрат 400×280 в центре, 3 пункта: NEW GAME / OPTIONS / QUIT
-• Навигация: ↑/↓ (циклическая), SPACE — выбор
-• Курсор: стрелка ▶ + яркий цвет выбранного пункта
-• NEW GAME: сброс всех полей (score, zone, lives, obstacles, timers, world_x),
-  старт с настройками из s->settings
-• OPTIONS: подменю-заглушка (реальная функциональность — patch_41)
-• QUIT: выход через should_quit → SDL_APP_SUCCESS
-• Старые клавиши 1/2/3 удалены (сложность теперь через OPTIONS)
-• Глиф '>' (код 50) добавлен в шрифт 5×7 — для курсора
-• draw_text / text_width / draw_text_centered вынесены из static
-  (extern в app.h), чтобы menu.cpp мог их использовать
-
-▸ АРХИТЕКТУРНОЕ РЕШЕНИЕ (early-return в SDL_AppIterate)
-
-В начале SDL_AppIterate — проверка состояния:
-  if (state == STATE_MENU || state == STATE_OPTIONS) {
-      menu_update(s, dt);
-      SDL_RenderClear();
-      menu_render(s->renderer, s);
-      SDL_RenderPresent();
-      return SDL_APP_CONTINUE;
-  }
-
-Старый код ATTRACT-рендера остаётся в файле как «мёртвый код» —
-вычистим отдельным патчем позже. Это безопаснее, чем замена больших
-блоков через re.sub (в первой версии patch_40 такое привело к удалению
-~900 строк main.cpp и потребовало откат).
-
-▸ ЗАДЕЛ НА БУДУЩЕЕ
-
-• s->settings (player_name, difficulty, attempts) — уже в AppState
-• s->top_scores (vector<ScoreEntry>) — уже в AppState
-• s->should_quit — уже используется для выхода
-• s->menu_cursor / options_cursor / name_input[11] — поля готовы
-• Все новые GameState-значения (MENU, OPTIONS, NAME_INPUT, LEADERBOARD)
-  в enum — можно включать по мере готовности
-
-▸ КОММИТЫ СЕГОДНЯ (feature/menu-scores)
-
-• 52f117e  refactor(step 1): extract app.h + skeleton menu/scores/settings
-• 766e5fe  menu: main menu (NEW GAME/OPTIONS/QUIT) + OPTIONS stub
-• d549980  menu: cursor '>' glyph + options layout fix
-
-▸ ФАЙЛЫ ПАТЧЕЙ
-
-• tools/patches/patch_38b_strip_structs_from_main.py
-• tools/patches/patch_39_skeleton_modules.py
-• tools/patches/patch_40b_safe.py
-• tools/patches/patch_40c_options_fix.py
-• tools/patches/patch_40d_cursor_fix.py
-• tools/patches/patch_41_news_html.py
-• tools/patches/patch_42_readme_html_update.py
-• tools/patches/patch_43_news_html_v2.py
-
-▸ СЛЕДУЮЩИЕ ШАГИ
-
-• [1] patch_44 — OPTIONS: DIFFICULTY + LIVES со стрелками ←/→
-• [2] patch_45 — NAME: ввод до 10 символов (A-Z, 0-9, Backspace)
-• [3] patch_46 — TOP SCORES: просмотр таблицы
-• [4] patch_47 — JSON: сохранение/загрузка settings.json, scores.json
-• [5] patch_48 — интеграция: GAME_OVER → TOP SCORES, авто-сохранение
-
-================================================================================
-
-================================================================================
- 2026-11-05 · v20261105 · «OPTIONS READY»
-================================================================================
-
-▸ РАСШИРЕНИЕ ШРИФТА (patch_44a)
-
-• 13 кириллических глифов объединены в таблицу CYR_MAP[] (13 пар)
-• switch (b1) → цикл по CYR_MAP: добавление новой буквы = 1 строка
-• +7 ASCII-символов в glyphs (коды 51-57):
-  - + (плюс), - (минус), . (точка), _ (подчёркивание)
-  - / (слэш), ( (скобка), ) (скобка)
-• +глиф < (код 58) — левая стрелка для OPTIONS
-• draw_glyph bound: 50 → 58
-• draw_text: обработка 8 новых символов, UTF-8 декодер упрощён (-8 строк)
-
-▸ РЕАЛЬНЫЙ OPTIONS (patch_44c)
-
-• render_options переписан:
-  - 5 строк: DIFFICULTY, NAME, LIVES, TOP SCORES, BACK
-  - Курсор ▶ у выбранного пункта
-  - Значения с парой < > для DIFFICULTY и LIVES
-  - Цвета: яркий (выбран), тусклый (остальные)
-• handle_options_event переписан:
-  - ↑↓ — навигация по 5 пунктам (циклическая)
-  - ←→ — изменение значения (только DIFFICULTY и LIVES)
-  - SPACE — вход в NAME / TOP SCORES / BACK (заглушки)
-  - ESC — возврат в главное меню
-• Логика значений:
-  - DIFFICULTY: EASY(0) ↔ NORMAL(1) ↔ HARD(2) — цикл
-  - LIVES: 1 ↔ 3 ↔ 7 — цикл
-  - Изменения сразу пишутся в s->settings
-• NEW GAME берёт difficulty и attempts из s->settings
-• Связка работает: OPTIONS → HARD + 7 → NEW GAME → HUD HARD + 7
-
-▸ КОММИТЫ СЕГОДНЯ
-
-• 3356179  refactor: utf8 table (CYR_MAP) + 7 ascii glyphs
-• 3c04301  menu: real OPTIONS (difficulty + lives with < > arrows)
-
-▸ ФАЙЛЫ ПАТЧЕЙ
-
-• tools/patches/patch_44a_utf8_table.py
-• tools/patches/patch_44b_left_arrow.py
-• tools/patches/patch_44c_options_real.py
-
-▸ СЛЕДУЮЩИЕ ШАГИ
-
-• [1] patch_45 — NAME input (A-Z, 0-9, Backspace, SPACE, ESC)
-• [2] patch_46 — TOP SCORES: просмотр таблицы
-• [3] patch_47 — JSON: сохранение/загрузка settings.json, scores.json
-• [4] patch_48 — интеграция: GAME_OVER → TOP SCORES
 
 ================================================================================

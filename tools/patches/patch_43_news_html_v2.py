@@ -258,7 +258,7 @@ s = Path('news.html').read_text(encoding='utf-8')
 first_date_m = re.search(r'<div class="news-date">(\d{4}-\d{2}-\d{2})</div>', s)
 first_date = first_date_m.group(1) if first_date_m else '?'
 checks = [
-    ('первая статья = 2026-11-04',   first_date == '2026-11-04'),
+    ('первая статья = самая новая',  first_date == max(art['date'] for art in articles)),
     ('2 статьи',                     s.count('news-entry') >= 2),
     ('нет линии "-----"',            '-----' not in s),
     ('sub-bullets (Группа)',         'news-sublist' in s),
