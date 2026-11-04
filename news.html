@@ -114,6 +114,66 @@ footer {
 
 <main>
 <article class="news-entry">
+  <div class="news-date">2026-11-05</div>
+  <div class="news-version">v20261105 · «OPTIONS READY»</div>
+  <h2 class="news-section">▸ РАСШИРЕНИЕ ШРИФТА (patch_44a)</h2>
+  <ul>
+    <li>13 кириллических глифов объединены в таблицу CYR_MAP[] (13 пар)</li>
+    <li>switch (b1) → цикл по CYR_MAP: добавление новой буквы = 1 строка</li>
+    <li>+7 ASCII-символов в glyphs (коды 51-57):</li>
+  </ul>
+  <p class="news-para">- + (плюс), - (минус), . (точка), _ (подчёркивание)</p>
+  <p class="news-para">- / (слэш), ( (скобка), ) (скобка)</p>
+  <ul>
+    <li>+глиф &lt; (код 58) — левая стрелка для OPTIONS</li>
+    <li>draw_glyph bound: 50 → 58</li>
+    <li>draw_text: обработка 8 новых символов, UTF-8 декодер упрощён (-8 строк)</li>
+  </ul>
+  <h2 class="news-section">▸ РЕАЛЬНЫЙ OPTIONS (patch_44c)</h2>
+  <ul>
+    <li>render_options переписан:</li>
+  </ul>
+  <p class="news-para">- 5 строк: DIFFICULTY, NAME, LIVES, TOP SCORES, BACK</p>
+  <p class="news-para">- Курсор ▶ у выбранного пункта</p>
+  <p class="news-para">- Значения с парой &lt; &gt; для DIFFICULTY и LIVES</p>
+  <p class="news-para">- Цвета: яркий (выбран), тусклый (остальные)</p>
+  <ul>
+    <li>handle_options_event переписан:</li>
+  </ul>
+  <p class="news-para">- ↑↓ — навигация по 5 пунктам (циклическая)</p>
+  <p class="news-para">- ←→ — изменение значения (только DIFFICULTY и LIVES)</p>
+  <p class="news-para">- SPACE — вход в NAME / TOP SCORES / BACK (заглушки)</p>
+  <p class="news-para">- ESC — возврат в главное меню</p>
+  <ul>
+    <li>Логика значений:</li>
+  </ul>
+  <p class="news-para">- DIFFICULTY: EASY(0) ↔ NORMAL(1) ↔ HARD(2) — цикл</p>
+  <p class="news-para">- LIVES: 1 ↔ 3 ↔ 7 — цикл</p>
+  <p class="news-para">- Изменения сразу пишутся в s-&gt;settings</p>
+  <ul>
+    <li>NEW GAME берёт difficulty и attempts из s-&gt;settings</li>
+    <li>Связка работает: OPTIONS → HARD + 7 → NEW GAME → HUD HARD + 7</li>
+  </ul>
+  <h2 class="news-section">▸ КОММИТЫ СЕГОДНЯ</h2>
+  <ul>
+    <li>3356179  refactor: utf8 table (CYR_MAP) + 7 ascii glyphs</li>
+    <li>3c04301  menu: real OPTIONS (difficulty + lives with &lt; &gt; arrows)</li>
+  </ul>
+  <h2 class="news-section">▸ ФАЙЛЫ ПАТЧЕЙ</h2>
+  <ul>
+    <li>tools/patches/patch_44a_utf8_table.py</li>
+    <li>tools/patches/patch_44b_left_arrow.py</li>
+    <li>tools/patches/patch_44c_options_real.py</li>
+  </ul>
+  <h2 class="news-section">▸ СЛЕДУЮЩИЕ ШАГИ</h2>
+  <ul>
+    <li>[1] patch_45 — NAME input (A-Z, 0-9, Backspace, SPACE, ESC)</li>
+    <li>[2] patch_46 — TOP SCORES: просмотр таблицы</li>
+    <li>[3] patch_47 — JSON: сохранение/загрузка settings.json, scores.json</li>
+    <li>[4] patch_48 — интеграция: GAME_OVER → TOP SCORES</li>
+  </ul>
+</article>
+<article class="news-entry">
   <div class="news-date">2026-11-04</div>
   <div class="news-version">v20261104 · «REFACTOR STEP 1 + MAIN MENU»</div>
   <h2 class="news-section">▸ РЕФАКТОРИНГ: ВЫНОС СТРУКТУР В app.h</h2>
