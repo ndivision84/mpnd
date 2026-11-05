@@ -78,6 +78,11 @@ struct Settings {
     std::string player_name = "PLAYER1";
     int         difficulty = 1;
     int         attempts   = 3;
+
+    // Audio (patch_45d, для MPND_SOUND)
+    int         music_volume = 100;
+    int         sfx_volume   = 100;
+    int         muted        = 0;
 };
 
 // ─── Состояния ──────────────────────────────────────────────
