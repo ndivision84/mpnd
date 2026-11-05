@@ -40,3 +40,13 @@ docs/report.html.bak*
 # Логи
 *.log
 /tmp/
+
+# ROM extraction patterns (gitignored, ROM © Irem)
+assets/patterns/
+
+# ROM extraction patterns (gitignored, ROM © Irem)
+assets/patterns/
+
+# Python
+__pycache__/
+*.pyc
