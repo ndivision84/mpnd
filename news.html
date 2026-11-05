@@ -115,6 +115,66 @@ footer {
 <main>
 <article class="news-entry">
   <div class="news-date">2026-11-05</div>
+  <div class="news-version">v20261105 · «SPRITE EXTRACTION (MPND_ART_ROM)»</div>
+  <h2 class="news-section">▸ КОНТЕКСТ</h2>
+  <ul>
+    <li>Работа велась в чате «Moon Patrol Reversing (Arcade)»</li>
+    <li>Цель: извлечь PNG-спрайты (луноход, НЛО, кратер, яма, камень) из ROM</li>
+    <li>Итог сессии 1: инфраструктура экстракции готова, идентификация тайлов — в работе</li>
+  </ul>
+  <h2 class="news-section">▸ ИНСТРУМЕНТ (tools/extract_patterns.py)</h2>
+  <ul>
+    <li>~300 строк, pure stdlib (argparse, struct, pathlib, zlib) — без зависимостей</li>
+    <li>Читает 5 графических банков mpe-1.3l … mpe-5.3e (5 × 4096 байт = 1280 тайлов 8×8)</li>
+    <li>Формат: planar 2bpp 8×8 (MAME m52.cpp tiles8x8_layout), MSB-first</li>
+    <li>CLI: --bank N, --cards, --force, --rom-dir, --out-dir, --pics-dir</li>
+    <li>Декодер проверен: шрифт A-Z и цифры 1-9 видны без искажений</li>
+  </ul>
+  <h2 class="news-section">▸ ДОКУМЕНТАЦИЯ И ИНФРАСТРУКТУРА</h2>
+  <ul>
+    <li>tools/README.md — запуск, формат тайла, связка с ND Dev, правовая заметка</li>
+    <li>tools/patches/patch_01_pics_mirror.py — идемпотентный патч (--pics-dir)</li>
+    <li>.gitignore: +assets/patterns/, +__pycache__/, +*.pyc</li>
+    <li>PNG-зеркало для чата: ~/Downloads/mpng/pics/ (255 PNG, вне git)</li>
+  </ul>
+  <h2 class="news-section">▸ ЧТО ВЫЯСНЕНО (визуальный анализ 5 банков)</h2>
+  <ul>
+    <li>0xF3 (bank 2) = дорога/земля (подтверждено)</li>
+    <li>Шрифт A-Z — bank 3 (0x20-0x2F), цифры 1-9 — bank 4 (0x10-0x1F)</li>
+    <li>Параллакс (горы) — bank 3/4 (0x40-0x6F)</li>
+    <li>НЛО — гипотеза: bank 4 (0xC0-0xFF), круглые купола</li>
+    <li>Луноход — гипотеза: bank 0 (0x40-0x4F), силуэты деталей</li>
+    <li>Кратер (0x26) и камень (0x27) из отчёта 23.4 — НЕ подтверждены</li>
+  </ul>
+  <p class="news-para">- 0x26 в bank 2 = фрагмент, 0x27 = пусто</p>
+  <p class="news-para">- вывод: 0x26/0x27 — это Screen RAM ID, а не gfx-номер</p>
+  <p class="news-para">- при экстракции нужна визуальная идентификация по банкам</p>
+  <h2 class="news-section">▸ КОММИТЫ (Reversing Arcade)</h2>
+  <ul>
+    <li>5277a02  tools: extract_patterns --pics-dir + patch_01_pics_mirror</li>
+    <li>76b9bf9  chore: dedupe assets/patterns rule in .gitignore</li>
+  </ul>
+  <h2 class="news-section">▸ ЧТО ДАЛЬШЕ (в чате Reversing Arcade)</h2>
+  <ul>
+    <li>[1] Идентифицировать кратер/камень/яму (bank 0/1/3/4 + mp-s1.1a)</li>
+    <li>[2] Подтвердить НЛО (bank 4) и луноход (bank 0)</li>
+    <li>[3] docs/sprites_manifest.md — таблица: файл, размер, origin, кадры, палитра</li>
+    <li>[4] tools/extract_sprites.py — сборка 8×8 тайлов в цельные PNG объектов</li>
+    <li>[5] assets/sprites/*.png — buggy, nlo, crater, pit, rock (ND Dev ждёт)</li>
+  </ul>
+  <h2 class="news-section">▸ ДЛЯ ND DEV</h2>
+  <ul>
+    <li>После готовности PNG — patch_49_integrate_sprites.py:</li>
+  </ul>
+  <p class="news-para">- draw_buggy() → SDL_RenderTexture</p>
+  <p class="news-para">- render.cpp с IMG_Load</p>
+  <p class="news-para">- z-order/позиции по sprites_map</p>
+  <ul>
+    <li>Интеграция не блокирует текущую работу (patch_45/46/47/48)</li>
+  </ul>
+</article>
+<article class="news-entry">
+  <div class="news-date">2026-11-05</div>
   <div class="news-version">v20261105 · «OPTIONS READY»</div>
   <h2 class="news-section">▸ РАСШИРЕНИЕ ШРИФТА (patch_44a)</h2>
   <ul>

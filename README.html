@@ -289,6 +289,8 @@ cmake --build build -j</code></pre>
 │   ├── decode_bg.py          # распаковка фонов
 │   ├── extract_level.py      # распаковка RLE-уровня
 │   ├── extract_known.py      # charset + HUD
+│   ├── extract_patterns.py   # ROM → PNG (5 gfx-банков, 1280 тайлов)
+│   ├── README.md             # документация инструментов
 │   └── patches/              # история патчей (Python)
 ├── docs/
 │   ├── report.html           # полный технический отчёт
@@ -347,8 +349,8 @@ cmake --build build -j</code></pre>
     <tr><td>2</td><td>TOP SCORES: просмотр таблицы</td><td>patch_46</td></tr>
     <tr><td>3</td><td>JSON: сохранение/загрузка</td><td>patch_47</td></tr>
     <tr><td>4</td><td>Интеграция: GAME_OVER → TOP SCORES</td><td>patch_48</td></tr>
-    <tr><td>5</td><td>Спрайты: луноход, NLO, препятствия, бомба</td><td><strong>MPND_ART</strong></td></tr>
-    <tr><td>6</td><td>Заставки START и GAME OVER</td><td><strong>MPND_ART</strong></td></tr>
+    <tr><td>5</td><td>Спрайты из ROM (инфраструктура готова: <code>tools/extract_patterns.py</code>)</td><td><strong>MPND_ART_ROM</strong></td></tr>
+    <tr><td>6</td><td>Заставки START и GAME OVER (рисование с нуля)</td><td><strong>MPND_ART</strong></td></tr>
     <tr><td>7</td><td>Движок музыки и звука</td><td><strong>MPND_SOUND</strong></td></tr>
   </table>
 </section>
