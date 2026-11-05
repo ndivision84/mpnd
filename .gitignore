@@ -44,8 +44,6 @@ docs/report.html.bak*
 # ROM extraction patterns (gitignored, ROM © Irem)
 assets/patterns/
 
-# ROM extraction patterns (gitignored, ROM © Irem)
-assets/patterns/
 
 # Python
 __pycache__/
