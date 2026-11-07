@@ -114,6 +114,43 @@ footer {
 
 <main>
 <article class="news-entry">
+  <div class="news-date">2026-11-07</div>
+  <div class="news-version">v20261105 · «Расширение исследовательских треков: +11 платформ»</div>
+  <p class="news-para">За последние два дня проект Moon Patrol ND подключил 11 новых</p>
+  <p class="news-para">исследовательских чатов, посвящённых реверс-инжинирингу версий</p>
+  <p class="news-para">Moon Patrol для классических платформ. Это расширяет базу</p>
+  <p class="news-para">знаний о том, как аркадная игра адаптировалась на разном</p>
+  <p class="news-para">железе.</p>
+  <p class="news-para">Новые треки:</p>
+  <ul>
+    <li>Atari 5200 (MP-5200) — 6502C, ANTIC/GTIA, POKEY</li>
+    <li>MSX (MP-MSX) — Z80, TMS9918, AY-3-8910</li>
+    <li>Commodore 64 (MP-C64) — 6510, VIC-II, SID</li>
+    <li>Commodore VIC-20 (MP-VIC20) — 6502, VIC-I</li>
+    <li>IBM PC DOS (MP-DOS) — 8088, CGA, PC Speaker</li>
+    <li>Apple II (MP-APPLEII) — 6502, HGR, спикер (+ исходник)</li>
+    <li>Atari 8-bit (MP-A8B) — 6502C, ANTIC/GTIA, POKEY</li>
+    <li>Atari ST (MP-ST) — 68000, Shifter, YM2149</li>
+    <li>Sord M5 (MP-SORDM5) — Z80, TMS9918, SN76489</li>
+    <li>TI-99/4A (MP-TI99) — TMS9900, TMS9918, SN76489</li>
+    <li>ZX Spectrum (MP-ZX) — Z80, ULA, 1-битный beeper</li>
+  </ul>
+  <p class="news-para">Каждый трек получил вводную документацию, регламент работ</p>
+  <p class="news-para">и план первой сессии (ROM recon).</p>
+</article>
+<article class="news-entry">
+  <div class="news-date">2026-11-05</div>
+  <div class="news-version">v20261105 · «Открытие чата Moon Patrol Sound»</div>
+  <p class="news-para">Открыт рабочий чат Moon Patrol Sound (MP-SND), посвящённый</p>
+  <p class="news-para">музыке и звуковым эффектам игры. Подтверждена работа</p>
+  <p class="news-para">SDL3_mixer 3.2.4_1 (Homebrew). В origin/main добавлен</p>
+  <p class="news-para">docs/sounds_manifest.md (18 SFX + 4 музыкальных трека).</p>
+  <p class="news-para">Подготовлен skeleton audio.cpp/h и патч patch_49 для</p>
+  <p class="news-para">запуска. Зафиксированы границы зон: app.h — зона MP-DEV,</p>
+  <p class="news-para">audio.* — зона MP-SND. Следующие шаги: patch_50 (wiring),</p>
+  <p class="news-para">patch_51 (интеграция).</p>
+</article>
+<article class="news-entry">
   <div class="news-date">2026-11-05</div>
   <div class="news-version">v20261105 · «SPRITE EXTRACTION (MPND_ART_ROM)»</div>
   <h2 class="news-section">▸ КОНТЕКСТ</h2>
